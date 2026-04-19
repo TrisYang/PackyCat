@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build outputs
+deploy/
+dist/
+dist-ssr/
+*.zip
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local env
+*.local
+.env
