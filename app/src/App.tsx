@@ -547,23 +547,23 @@ export default function App() {
      ═══════════════════════════════════════════════ */
   const suitcaseSize = useMemo(() => {
     const d = tripConfig.days || 5;
-    if (d <= 3) return { desktop: { w: 300, h: 225 }, mobile: { w: 110, h: 82 } };
-    if (d <= 7) return { desktop: { w: 380, h: 285 }, mobile: { w: 130, h: 98 } };
-    return { desktop: { w: 460, h: 345 }, mobile: { w: 150, h: 112 } };
+    // Flat open suitcase: wider than tall
+    if (d <= 3) return { desktop: { w: 380, h: 200 }, mobile: { w: 140, h: 72 } };
+    if (d <= 7) return { desktop: { w: 440, h: 220 }, mobile: { w: 160, h: 80 } };
+    if (d <= 14) return { desktop: { w: 480, h: 240 }, mobile: { w: 180, h: 88 } };
+    return { desktop: { w: 520, h: 260 }, mobile: { w: 200, h: 96 } };
   }, [tripConfig.days]);
 
   /* ═══════════════════════════════════════════════
-     Sub-Component: Scene Panel — 4 Layer Architecture
-     Layer 1: Background (fixed)
-     Layer 2: Suitcase (size changes with days)
-     Layer 3: Cat (actions per user operation)
-     Layer 4: Items (flying / on-hand / in-suitcase)
+     Sub-Component: Scene Panel — Flat Suitcase Layout
+     Cat lies inside a flat-open suitcase
      ═══════════════════════════════════════════════ */
   const ScenePanel = ({ isMobile = false }: { isMobile?: boolean }) => {
     const sz = isMobile ? suitcaseSize.mobile : suitcaseSize.desktop;
-    const catW = isMobile ? 60 : 190;
+    const catW = isMobile ? 55 : 140; // fixed cat size regardless of suitcase
     const flightItem = flight.itemId ? allItems.find(i => i.id === flight.itemId) : null;
     const flightImg = flightItem ? getItemImage(flightItem.text) : '';
+    const br = isMobile ? 8 : 16;
 
     // Cat animation class
     const catAnimClass =
@@ -591,93 +591,151 @@ export default function App() {
           }} />
         ))}
 
-        {/* ══════ LAYER 2: Suitcase ══════ */}
+        {/* ══════ LAYER 2+3: Flat Suitcase + Cat Inside ══════ */}
         <div className="absolute z-10" style={{
-          left: '50%', bottom: isMobile ? 12 : 40,
-          transform: 'translateX(-65%)',
-          width: sz.w, height: sz.h,
+          left: '50%', bottom: isMobile ? 20 : 40,
+          transform: 'translateX(-50%)',
         }}>
-          <div className={`relative w-full h-full ${suitcaseClosed ? 'suitcase-closing' : ''}`}>
-            {/* Suitcase shell */}
-            <img src="/suitcase-items.png" alt="行李箱" className="absolute inset-0 w-full h-full object-contain" draggable={false} style={{ zIndex: 10 }} />
+          <div style={{ width: sz.w, height: sz.h, position: 'relative' }}>
 
-            {/* Inner cavity — items placed precisely inside */}
-            <div className="suitcase-inner" style={{ zIndex: 15 }}>
-              {Object.entries(packedSlots).map(([itemId, slot]) => {
-                const item = allItems.find(i => i.id === itemId);
-                if (!item) return null;
-                const layerYBase = [5, 35, 65][slot.layer];
-                const x = 5 + (slot.x % 85);
-                const y = layerYBase + (slot.y % 28);
-                const itemSize = isMobile ? 14 : 24 + slot.layer * 4;
-                return (
-                  <div key={itemId} className="packed-item-visual" style={{
-                    left: `${x}%`, bottom: `${y}%`,
-                    width: itemSize, height: itemSize,
-                    zIndex: 20 + slot.layer * 25,
-                    transform: `rotate(${slot.rotate}deg)`,
-                  }}>
-                    <img src={getItemImage(item.text)} alt={item.text} className="w-full h-full object-contain" draggable={false} />
-                  </div>
-                );
-              })}
-            </div>
+            {/* === Suitcase Left Half === */}
+            <div style={{
+              position: 'absolute', left: 0, top: 0, width: '50%', height: '100%',
+              background: 'linear-gradient(180deg, #F2B5C1 0%, #E8A0B0 100%)',
+              borderRadius: `${br}px 0 0 ${br}px`,
+              border: '2px solid #E090A0',
+              boxShadow: 'inset 2px 0 4px rgba(255,255,255,0.3)',
+            }}>
+              {/* Inner lining */}
+              <div style={{
+                position: 'absolute', left: 6, top: 6, right: 3, bottom: 6,
+                background: 'linear-gradient(135deg, #FFF0F0 0%, #F8E0E0 100%)',
+                borderRadius: `${Math.max(2, br - 4)}px 0 0 ${Math.max(2, br - 4)}px`,
+                overflow: 'hidden',
+              }}>
+                {/* Cross straps decoration */}
+                <div style={{ position: 'absolute', inset: '8%', opacity: 0.22 }}>
+                  <div style={{ position: 'absolute', top: 0, left: '20%', width: '12%', height: '100%', background: '#C08080', borderRadius: 4 }} />
+                  <div style={{ position: 'absolute', top: 0, right: '20%', width: '12%', height: '100%', background: '#C08080', borderRadius: 4 }} />
+                  <div style={{ position: 'absolute', top: '30%', left: 0, width: '100%', height: '10%', background: '#C08080', borderRadius: 4 }} />
+                  <div style={{ position: 'absolute', bottom: '30%', left: 0, width: '100%', height: '10%', background: '#C08080', borderRadius: 4 }} />
+                </div>
 
-            {/* Closed lid (highest z in suitcase layer) */}
-            {suitcaseClosed && (
-              <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 40, animation: 'zipper-close 0.8s ease-out forwards' }}>
-                <div className="w-full h-full rounded-2xl" style={{ background: 'linear-gradient(180deg, #3A3A3A 0%, #2A2A2A 100%)', opacity: 0.85 }}>
-                  <div className="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-3 rounded-full" style={{ background: '#555' }} />
+                {/* === Cat lying inside left half === */}
+                <div className={`absolute z-30 ${catAnimClass}`} style={{
+                  left: '55%', top: '50%',
+                  transform: 'translate(-50%, -50%) rotate(-80deg)',
+                  width: catW,
+                  transformOrigin: 'center center',
+                }}>
+                  <img src="/cat-butler.png" alt="小猫管家" style={{ width: '100%', height: 'auto' }} className="object-contain drop-shadow-lg" draggable={false} />
+
+                  {/* Item held in cat's hand */}
+                  {handItemId && flight.phase === 'at-cat' && flightItem && (
+                    <div className="absolute" style={{
+                      left: '10%', top: '30%',
+                      width: isMobile ? 20 : 30,
+                      height: isMobile ? 20 : 30,
+                      zIndex: 35,
+                      animation: 'fly-to-cat 0.3s ease-out forwards',
+                      transform: 'rotate(80deg)',
+                    }}>
+                      <img src={flightImg} alt="" className="w-full h-full object-contain drop-shadow-md" draggable={false} />
+                    </div>
+                  )}
+
+                  {/* Item being removed */}
+                  {handItemId && flight.phase === 'removing' && flightItem && (
+                    <div className="absolute" style={{
+                      left: '10%', top: '30%',
+                      width: isMobile ? 20 : 30,
+                      height: isMobile ? 20 : 30,
+                      zIndex: 35,
+                      animation: 'fly-from-suitcase 0.4s ease-in forwards',
+                      transform: 'rotate(80deg)',
+                    }}>
+                      <img src={flightImg} alt="" className="w-full h-full object-contain drop-shadow-md" draggable={false} />
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
+            </div>
+
+            {/* === Suitcase Right Half === */}
+            <div style={{
+              position: 'absolute', right: 0, top: 0, width: '50%', height: '100%',
+              background: 'linear-gradient(180deg, #F2B5C1 0%, #E8A0B0 100%)',
+              borderRadius: `0 ${br}px ${br}px 0`,
+              border: '2px solid #E090A0',
+              boxShadow: 'inset -2px 0 4px rgba(255,255,255,0.3)',
+            }}>
+              {/* Inner cavity — items placed inside right half */}
+              <div style={{
+                position: 'absolute', left: 3, top: 6, right: 6, bottom: 6,
+                background: 'linear-gradient(135deg, #4A4A4A 0%, #333333 100%)',
+                borderRadius: `0 ${Math.max(2, br - 4)}px ${Math.max(2, br - 4)}px 0`,
+                overflow: 'hidden',
+              }}>
+                {Object.entries(packedSlots).map(([itemId, slot]) => {
+                  const item = allItems.find(i => i.id === itemId);
+                  if (!item) return null;
+                  const layerYBase = [10, 40, 70][slot.layer];
+                  const x = 5 + (slot.x % 85);
+                  const y = layerYBase + (slot.y % 25);
+                  const itemSize = isMobile ? 14 : 22 + slot.layer * 3;
+                  return (
+                    <div key={itemId} className="packed-item-visual" style={{
+                      left: `${x}%`, bottom: `${y}%`,
+                      width: itemSize, height: itemSize,
+                      zIndex: 20 + slot.layer * 25,
+                      transform: `rotate(${slot.rotate}deg)`,
+                    }}>
+                      <img src={getItemImage(item.text)} alt={item.text} className="w-full h-full object-contain" draggable={false} />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Closed lid overlay */}
+              {suitcaseClosed && (
+                <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 40, animation: 'zipper-close 0.8s ease-out forwards' }}>
+                  <div className="w-full h-full" style={{ background: 'linear-gradient(180deg, #3A3A3A 0%, #2A2A2A 100%)', opacity: 0.85, borderRadius: `0 ${Math.max(2, br - 4)}px ${Math.max(2, br - 4)}px 0` }}>
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-2 rounded-full" style={{ background: '#555' }} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* === Center Zipper === */}
+            <div style={{
+              position: 'absolute', left: '50%', top: 2, bottom: 2, width: 4,
+              background: 'repeating-linear-gradient(to bottom, #D0D0D0 0px, #D0D0D0 3px, transparent 3px, transparent 6px)',
+              transform: 'translateX(-50%)', zIndex: 15,
+              borderRadius: 2,
+            }} />
+
+            {/* === Wheels === */}
+            <div style={{ position: 'absolute', bottom: -10, left: '12%', width: isMobile ? 8 : 12, height: isMobile ? 8 : 12, background: '#555', borderRadius: '50%', zIndex: 5 }} />
+            <div style={{ position: 'absolute', bottom: -10, left: '36%', width: isMobile ? 8 : 12, height: isMobile ? 8 : 12, background: '#555', borderRadius: '50%', zIndex: 5 }} />
+            <div style={{ position: 'absolute', bottom: -10, right: '36%', width: isMobile ? 8 : 12, height: isMobile ? 8 : 12, background: '#555', borderRadius: '50%', zIndex: 5 }} />
+            <div style={{ position: 'absolute', bottom: -10, right: '12%', width: isMobile ? 8 : 12, height: isMobile ? 8 : 12, background: '#555', borderRadius: '50%', zIndex: 5 }} />
+
+            {/* === Handle === */}
+            <div style={{
+              position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
+              width: isMobile ? 30 : 50, height: isMobile ? 8 : 12,
+              background: 'linear-gradient(180deg, #E8A0B0 0%, #D08090 100%)',
+              borderRadius: '6px 6px 0 0', zIndex: 5,
+            }} />
           </div>
         </div>
 
-        {/* ══════ LAYER 3: Cat Butler ══════ */}
-        <div className="absolute z-30" style={{
-          right: isMobile ? '12%' : '18%',
-          bottom: isMobile ? 10 : 30,
-        }}>
-          <div className={`${catAnimClass}`}>
-            <img src="/cat-butler.png" alt="小猫管家" style={{ width: catW, height: 'auto' }} className="object-contain drop-shadow-lg" draggable={false} />
-
-            {/* Item held in cat's hand (shown when phase='at-cat') */}
-            {handItemId && flight.phase === 'at-cat' && flightItem && (
-              <div className="absolute" style={{
-                left: isMobile ? '8%' : '5%',
-                top: isMobile ? '35%' : '38%',
-                width: isMobile ? 22 : 38,
-                height: isMobile ? 22 : 38,
-                zIndex: 35,
-                animation: 'fly-to-cat 0.3s ease-out forwards',
-              }}>
-                <img src={flightImg} alt="" className="w-full h-full object-contain drop-shadow-md" draggable={false} />
-              </div>
-            )}
-
-            {/* Item being removed (shown when phase='removing') */}
-            {handItemId && flight.phase === 'removing' && flightItem && (
-              <div className="absolute" style={{
-                left: isMobile ? '8%' : '5%',
-                top: isMobile ? '35%' : '38%',
-                width: isMobile ? 22 : 38,
-                height: isMobile ? 22 : 38,
-                zIndex: 35,
-                animation: 'fly-from-suitcase 0.4s ease-in forwards',
-              }}>
-                <img src={flightImg} alt="" className="w-full h-full object-contain drop-shadow-md" draggable={false} />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ══════ LAYER 4: Flying Items (between cat and suitcase) ══════ */}
+        {/* ══════ LAYER 4: Flying Items ══════ */}
         {/* Item flying from checklist TO cat's hand */}
         {flight.phase === 'to-cat' && flightItem && (
           <div className="absolute z-40" style={{
-            right: isMobile ? '18%' : '25%',
-            bottom: isMobile ? '35%' : '40%',
+            left: `calc(50% - ${sz.w * 0.15}px)`,
+            bottom: `calc(${isMobile ? 20 : 40}px + ${sz.h * 0.5}px)`,
             width: isMobile ? 24 : 40,
             height: isMobile ? 24 : 40,
             animation: 'fly-to-cat 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
@@ -689,8 +747,8 @@ export default function App() {
         {/* Item flying FROM cat's hand TO inside suitcase */}
         {flight.phase === 'to-suitcase' && flightItem && (
           <div className="absolute z-40" style={{
-            left: `calc(50% - ${sz.w * 0.25}px)`,
-            bottom: `calc(${sz.h * 0.4}px)`,
+            left: `calc(50% + ${sz.w * 0.1}px)`,
+            bottom: `calc(${isMobile ? 20 : 40}px + ${sz.h * 0.4}px)`,
             width: isMobile ? 20 : 32,
             height: isMobile ? 20 : 32,
             animation: 'fly-to-suitcase 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
