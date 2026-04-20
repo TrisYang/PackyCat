@@ -547,11 +547,11 @@ export default function App() {
      ═══════════════════════════════════════════════ */
   const suitcaseSize = useMemo(() => {
     const d = tripConfig.days || 5;
-    // Flat open suitcase: wider than tall
-    if (d <= 3) return { desktop: { w: 380, h: 200 }, mobile: { w: 140, h: 72 } };
-    if (d <= 7) return { desktop: { w: 440, h: 220 }, mobile: { w: 160, h: 80 } };
-    if (d <= 14) return { desktop: { w: 480, h: 240 }, mobile: { w: 180, h: 88 } };
-    return { desktop: { w: 520, h: 260 }, mobile: { w: 200, h: 96 } };
+    // Flat open suitcase: larger to dominate the scene
+    if (d <= 3) return { desktop: { w: 520, h: 347 }, mobile: { w: 200, h: 133 } };
+    if (d <= 7) return { desktop: { w: 600, h: 400 }, mobile: { w: 240, h: 160 } };
+    if (d <= 14) return { desktop: { w: 660, h: 440 }, mobile: { w: 280, h: 187 } };
+    return { desktop: { w: 720, h: 480 }, mobile: { w: 320, h: 213 } };
   }, [tripConfig.days]);
 
   /* ═══════════════════════════════════════════════
@@ -579,7 +579,7 @@ export default function App() {
       <div className={`scene-panel relative overflow-hidden ${isMobile ? 'flex md:hidden' : 'hidden md:flex flex-1'}`}>
 
         {/* ══════ LAYER 1: Background (always fixed) ══════ */}
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/room-bg.jpg)', filter: 'brightness(1.05)' }} />
+        <div className="absolute inset-0" style={{ backgroundImage: 'url(/room-bg.jpg)', backgroundSize: '120% auto', backgroundPosition: 'center 20%', backgroundRepeat: 'no-repeat', filter: 'brightness(1.05)' }} />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(255,251,242,0.3) 0%, rgba(255,251,242,0.05) 50%, rgba(255,251,242,0.4) 100%)' }} />
 
         {/* Particles */}
@@ -600,8 +600,8 @@ export default function App() {
           {/* Suitcase flat image */}
           <img src="/suitcase-flat.png" alt="行李箱" className="w-full h-full object-contain" draggable={false} style={{ position: 'relative', zIndex: 10 }} />
 
-          {/* Items placed inside right half */}
-          <div style={{ position: 'absolute', left: '52%', top: '8%', right: '5%', bottom: '12%', zIndex: 15, overflow: 'hidden' }}>
+          {/* Items placed inside right half — strictly within gray lining */}
+          <div style={{ position: 'absolute', left: '55%', top: '24%', right: '4%', bottom: '26%', zIndex: 15, overflow: 'hidden' }}>
             {Object.entries(packedSlots).map(([itemId, slot]) => {
               const item = allItems.find(i => i.id === itemId);
               if (!item) return null;
@@ -622,10 +622,9 @@ export default function App() {
             })}
           </div>
 
-          {/* === Cat lying inside left half === */}
+          {/* === Cat lying inside left half — fixed corner position === */}
           <div className={`absolute z-30 ${catAnimClass}`} style={{
-            left: '10%', top: '50%',
-            transform: 'translateY(-50%)',
+            left: '6%', top: '22%',
             width: catW,
           }}>
             <img src="/cat-lying.png" alt="小猫管家" style={{ width: '100%', height: 'auto' }} className="object-contain drop-shadow-lg" draggable={false} />
@@ -668,11 +667,11 @@ export default function App() {
         </div>
 
         {/* ══════ LAYER 4: Flying Items ══════ */}
-        {/* Item flying from checklist TO cat's hand */}
+        {/* Item flying from checklist TO cat's hand (left half corner) */}
         {flight.phase === 'to-cat' && flightItem && (
           <div className="absolute z-40" style={{
-            left: `calc(50% - ${sz.w * 0.15}px)`,
-            bottom: `calc(${isMobile ? 20 : 40}px + ${sz.h * 0.5}px)`,
+            left: `calc(50% - ${sz.w * 0.38}px)`,
+            bottom: `calc(${isMobile ? 20 : 40}px + ${sz.h * 0.6}px)`,
             width: isMobile ? 24 : 40,
             height: isMobile ? 24 : 40,
             animation: 'fly-to-cat 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
@@ -681,11 +680,11 @@ export default function App() {
           </div>
         )}
 
-        {/* Item flying FROM cat's hand TO inside suitcase */}
+        {/* Item flying FROM cat's hand TO inside suitcase (right half) */}
         {flight.phase === 'to-suitcase' && flightItem && (
           <div className="absolute z-40" style={{
-            left: `calc(50% + ${sz.w * 0.1}px)`,
-            bottom: `calc(${isMobile ? 20 : 40}px + ${sz.h * 0.4}px)`,
+            left: `calc(50% + ${sz.w * 0.08}px)`,
+            bottom: `calc(${isMobile ? 20 : 40}px + ${sz.h * 0.5}px)`,
             width: isMobile ? 20 : 32,
             height: isMobile ? 20 : 32,
             animation: 'fly-to-suitcase 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
