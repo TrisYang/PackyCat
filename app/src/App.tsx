@@ -60,10 +60,29 @@ const PURPOSES = [
 ];
 
 const ITEM_IMAGES: Record<string, string> = {
-  'item-shirt': '/item-shirt.png',
-  'item-toiletry': '/item-toiletry.png',
-  'item-camera': '/item-camera.png',
-  'item-passport': '/item-passport.png',
+  // 证件与财物
+  'item-passport': '/item_passport.png',
+  'item-wallet': '/item_wallet.png',
+  // 衣物穿搭
+  'item-shirt': '/item_shirt.png',
+  'item-pants': '/item_pants.png',
+  'item-dress': '/item_dress.png',
+  'item-socks': '/item_socks.png',
+  'item-jacket': '/item_jacket.png',
+  'item-scarf': '/item_scarf.png',
+  // 洗护健康
+  'item-toiletries': '/item_toiletries.png',
+  'item-skincare': '/item_skincare.png',
+  'item-mask': '/item_mask.png',
+  // 电子设备 & 摄影
+  'item-charger': '/item_charger.png',
+  'item-camera': '/item_camera.png',
+  'item-sunglasses': '/item_sunglasses.png',
+  // 其他
+  'item-shoes': '/item_shoes.png',
+  'item-pouch': '/item_pouch.png',
+  'item-hat': '/item_hat.png',
+  'item-sunhat': '/item_sunhat.png',
 };
 
 const DEST_IMAGES: Record<string, string> = {
@@ -92,9 +111,35 @@ function getDestImage(destination: string, purpose: string): string {
 
 function getItemImage(itemName: string): string {
   const n = itemName.toLowerCase();
-  if (n.includes('t恤') || n.includes('衬衫') || n.includes('衣') || n.includes('裤') || n.includes('服') || n.includes('衫') || n.includes('裙') || n.includes('睡衣') || n.includes('内衣') || n.includes('袜') || n.includes('鞋') || n.includes('巾')) return ITEM_IMAGES['item-shirt'];
-  if (n.includes('洗') || n.includes('护') || n.includes('霜') || n.includes('膏') || n.includes('液') || n.includes('牙') || n.includes('防晒') || n.includes('卸妆') || n.includes('药') || n.includes('创可贴') || n.includes('浴') || n.includes('化妆')) return ITEM_IMAGES['item-toiletry'];
-  if (n.includes('相机') || n.includes('充电') || n.includes('耳机') || n.includes('电子') || n.includes('设备') || n.includes('电脑') || n.includes('插头') || n.includes('转换')) return ITEM_IMAGES['item-camera'];
+
+  /* ── 证件与财物 ── */
+  if (n.includes('护照') || n.includes('身份证') || n.includes('行程单')) return ITEM_IMAGES['item-passport'];
+  if (n.includes('银行卡') || n.includes('现金') || n.includes('钱包') || n.includes('名片')) return ITEM_IMAGES['item-wallet'];
+
+  /* ── 衣物穿搭 ── */
+  if (n.includes('t恤') || n.includes('衬衫') || n.includes('背心') || (n.includes('衣') && !n.includes('雨衣'))) return ITEM_IMAGES['item-shirt'];
+  if ((n.includes('裤') || n.includes('裙')) && !n.includes('内衣')) return ITEM_IMAGES['item-pants'];
+  if (n.includes('睡衣')) return ITEM_IMAGES['item-dress'];
+  if (n.includes('袜') || n.includes('内衣')) return ITEM_IMAGES['item-socks'];
+  if (n.includes('外套') || n.includes('夹克') || n.includes('雨衣') || n.includes('西装')) return ITEM_IMAGES['item-jacket'];
+  if (n.includes('围巾') || n.includes('伞')) return ITEM_IMAGES['item-scarf'];
+
+  /* ── 洗护健康 ── */
+  if (n.includes('洗漱') || n.includes('牙') || n.includes('浴') || n.includes('化妆')) return ITEM_IMAGES['item-toiletries'];
+  if (n.includes('洗') || n.includes('护') || n.includes('霜') || n.includes('液') || n.includes('防晒') || n.includes('卸妆') || n.includes('精华')) return ITEM_IMAGES['item-skincare'];
+  if (n.includes('药') || n.includes('面膜') || n.includes('能量')) return ITEM_IMAGES['item-mask'];
+
+  /* ── 电子设备 & 摄影 ── */
+  if (n.includes('相机') || n.includes('三脚架')) return ITEM_IMAGES['item-camera'];
+  if (n.includes('充电') || n.includes('插头') || n.includes('转换') || n.includes('电池')) return ITEM_IMAGES['item-charger'];
+  if (n.includes('耳机') || n.includes('电脑') || n.includes('笔记本') || n.includes('电子') || n.includes('设备')) return ITEM_IMAGES['item-sunglasses'];
+
+  /* ── 鞋帽包 & 其他 ── */
+  if (n.includes('鞋') || n.includes('拖')) return ITEM_IMAGES['item-shoes'];
+  if (n.includes('收纳') || n.includes('袋') || n.includes('包') || n.includes('防水') || n.includes('手机袋')) return ITEM_IMAGES['item-pouch'];
+  if (n.includes('遮阳帽') || n.includes('沙滩帽')) return ITEM_IMAGES['item-sunhat'];
+  if (n.includes('帽')) return ITEM_IMAGES['item-hat'];
+
   return ITEM_IMAGES['item-passport'];
 }
 
@@ -579,7 +624,7 @@ export default function App() {
       <div className={`scene-panel relative overflow-hidden ${isMobile ? 'flex md:hidden' : 'hidden md:flex flex-1'}`}>
 
         {/* ══════ LAYER 1: Background (always fixed) ══════ */}
-        <div className="absolute inset-0" style={{ backgroundImage: 'url(/room-bg.jpg)', backgroundSize: '120% auto', backgroundPosition: 'center 20%', backgroundRepeat: 'no-repeat', filter: 'brightness(1.05)' }} />
+        <div className="absolute inset-0" style={{ backgroundImage: 'url(/room-floor-2.png)', backgroundSize: 'cover', backgroundPosition: 'center bottom', backgroundRepeat: 'no-repeat' }} />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(255,251,242,0.3) 0%, rgba(255,251,242,0.05) 50%, rgba(255,251,242,0.4) 100%)' }} />
 
         {/* Particles */}
@@ -627,7 +672,7 @@ export default function App() {
             left: '6%', top: '22%',
             width: catW,
           }}>
-            <img src="/cat-lying.png" alt="小猫管家" style={{ width: '100%', height: 'auto' }} className="object-contain drop-shadow-lg" draggable={false} />
+            <img src="/cat-sleeping.png" alt="小猫管家" style={{ width: '100%', height: 'auto' }} className="object-contain drop-shadow-lg" draggable={false} />
 
             {/* Item held in cat's hand */}
             {handItemId && flight.phase === 'at-cat' && flightItem && (
