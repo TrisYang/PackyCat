@@ -159,15 +159,11 @@ function getItemLayer(itemName: string): number {
 
 function calculateSlot(packedCountByLayer: [number, number, number], layer: number): PackedSlot {
   const count = packedCountByLayer[layer];
-  const colsPerLayer = [4, 3, 3];
-  const cols = colsPerLayer[layer];
-  const col = count % cols;
 
-  // x: spread across 0-80 range (inner container is 80% of suitcase width)
-  const x = col * (85 / cols) + 5 + (Math.random() - 0.5) * 6;
-  // y: each layer has its own zone within the inner container
-  const y = (Math.random() - 0.5) * 8;
-  const rotate = [-4, -1, 2, 5][col % 4] + (Math.random() - 0.5) * 3;
+  // x, y in 15-85 range (15% margin to stay within suitcase inner lining)
+  const x = 15 + Math.random() * 70;
+  const y = 15 + Math.random() * 70;
+  const rotate = [-4, -1, 2, 5][count % 4] + (Math.random() - 0.5) * 3;
   const scale = layer === 2 ? 1.05 : layer === 0 ? 0.9 : 1.0;
 
   return { x, y, rotate, layer, scale };
@@ -612,6 +608,24 @@ export default function App() {
     const days = tripConfig.days || 5;
     const suitcaseImg = days <= 3 ? '/v2_suitcase_small_black.png' : days <= 7 ? '/v2_suitcase_medium_black.png' : '/v2_suitcase_large_black.png';
 
+    // Suitcase inner lining area (pixels analyzed from each suitcase image)
+    const SUITCASE_INSET = {
+      small:  { left: 14.4, right: 14.0, top: 22.9, bottom: 22.9 },
+      medium: { left: 11.1, right:  8.9, top: 14.8, bottom: 15.0 },
+      large:  { left:  9.7, right:  8.3, top: 16.2, bottom: 16.3 },
+    };
+    const inset = days <= 3 ? SUITCASE_INSET.small : days <= 7 ? SUITCASE_INSET.medium : SUITCASE_INSET.large;
+    const innerLeft = inset.left;
+    const innerRight = 100 - inset.right;
+    const innerTop = inset.top;
+    const innerBottom = 100 - inset.bottom;
+    const innerWidth = innerRight - innerLeft;
+    const innerHeight = innerBottom - innerTop;
+
+    // Cat fixed position inside inner lining (top-left corner with small offset)
+    const catLeft = innerLeft + 3;
+    const catTop = innerTop + 3;
+
     // Cat animation class
     const catAnimClass =
       catState === 'jumping' ? 'cat-jumping' :
@@ -647,31 +661,32 @@ export default function App() {
           {/* Suitcase flat image */}
           <img src={suitcaseImg} alt="行李箱" className="w-full h-full object-contain" draggable={false} style={{ position: 'relative', zIndex: 10 }} />
 
-          {/* Items placed inside right half — strictly within gray lining */}
-          <div style={{ position: 'absolute', left: '55%', top: '24%', right: '4%', bottom: '26%', zIndex: 15, overflow: 'hidden' }}>
-            {Object.entries(packedSlots).map(([itemId, slot]) => {
-              const item = allItems.find(i => i.id === itemId);
-              if (!item) return null;
-              const layerYBase = [10, 40, 70][slot.layer];
-              const x = 5 + (slot.x % 85);
-              const y = layerYBase + (slot.y % 25);
-              const itemSize = isMobile ? 70 : (22 + slot.layer * 3) * 5;
-              return (
-                <div key={itemId} className="packed-item-visual" style={{
-                  left: `${x}%`, bottom: `${y}%`,
-                  width: itemSize, height: itemSize,
-                  zIndex: 20 + slot.layer * 25,
-                  transform: `rotate(${slot.rotate}deg)`,
-                }}>
-                  <img src={getItemImage(item.text)} alt={item.text} className="w-full h-full object-contain" draggable={false} />
-                </div>
-              );
-            })}
-          </div>
+          {/* Items placed inside suitcase inner lining — no overflow clipping */}
+          {Object.entries(packedSlots).map(([itemId, slot]) => {
+            const item = allItems.find(i => i.id === itemId);
+            if (!item) return null;
+            // Map slot.x/y (15-85) to inner lining area
+            const x = innerLeft + ((slot.x - 15) / 70) * innerWidth;
+            const y = innerBottom + ((slot.y - 15) / 70) * innerHeight;
+            const itemSize = isMobile ? 70 : (22 + slot.layer * 3) * 5;
+            return (
+              <div key={itemId} className="packed-item-visual" style={{
+                position: 'absolute',
+                left: `${x}%`,
+                bottom: `${y}%`,
+                width: itemSize, height: itemSize,
+                zIndex: 20 + slot.layer * 25,
+                transform: `translate(-50%, -50%) rotate(${slot.rotate}deg)`,
+              }}>
+                <img src={getItemImage(item.text)} alt={item.text} className="w-full h-full object-contain" draggable={false} />
+              </div>
+            );
+          })}
 
-          {/* === Cat lying inside left half — fixed corner position === */}
+          {/* === Cat lying inside suitcase inner area — fixed corner === */}
           <div className={`absolute z-30 ${catAnimClass}`} style={{
-            left: '6%', top: '22%',
+            left: `${catLeft}%`,
+            top: `${catTop}%`,
             width: catW,
           }}>
             <img src="/cat-sleeping.png" alt="小猫管家" style={{ width: '100%', height: 'auto' }} className="object-contain drop-shadow-lg" draggable={false} />
