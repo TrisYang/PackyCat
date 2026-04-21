@@ -609,6 +609,8 @@ export default function App() {
     const flightItem = flight.itemId ? allItems.find(i => i.id === flight.itemId) : null;
     const flightImg = flightItem ? getItemImage(flightItem.text) : '';
     const br = isMobile ? 8 : 16;
+    const days = tripConfig.days || 5;
+    const suitcaseImg = days <= 3 ? '/v2_suitcase_small_black.png' : days <= 7 ? '/v2_suitcase_medium_black.png' : '/v2_suitcase_large_black.png';
 
     // Cat animation class
     const catAnimClass =
@@ -643,7 +645,7 @@ export default function App() {
           width: sz.w, height: sz.h,
         }}>
           {/* Suitcase flat image */}
-          <img src="/suitcase-flat.png" alt="行李箱" className="w-full h-full object-contain" draggable={false} style={{ position: 'relative', zIndex: 10 }} />
+          <img src={suitcaseImg} alt="行李箱" className="w-full h-full object-contain" draggable={false} style={{ position: 'relative', zIndex: 10 }} />
 
           {/* Items placed inside right half — strictly within gray lining */}
           <div style={{ position: 'absolute', left: '55%', top: '24%', right: '4%', bottom: '26%', zIndex: 15, overflow: 'hidden' }}>
@@ -653,7 +655,7 @@ export default function App() {
               const layerYBase = [10, 40, 70][slot.layer];
               const x = 5 + (slot.x % 85);
               const y = layerYBase + (slot.y % 25);
-              const itemSize = isMobile ? 14 : 22 + slot.layer * 3;
+              const itemSize = isMobile ? 70 : (22 + slot.layer * 3) * 5;
               return (
                 <div key={itemId} className="packed-item-visual" style={{
                   left: `${x}%`, bottom: `${y}%`,
@@ -678,8 +680,8 @@ export default function App() {
             {handItemId && flight.phase === 'at-cat' && flightItem && (
               <div className="absolute" style={{
                 left: '30%', top: '20%',
-                width: isMobile ? 20 : 30,
-                height: isMobile ? 20 : 30,
+                width: isMobile ? 100 : 150,
+                height: isMobile ? 100 : 150,
                 zIndex: 35,
                 animation: 'fly-to-cat 0.3s ease-out forwards',
               }}>
@@ -691,8 +693,8 @@ export default function App() {
             {handItemId && flight.phase === 'removing' && flightItem && (
               <div className="absolute" style={{
                 left: '30%', top: '20%',
-                width: isMobile ? 20 : 30,
-                height: isMobile ? 20 : 30,
+                width: isMobile ? 100 : 150,
+                height: isMobile ? 100 : 150,
                 zIndex: 35,
                 animation: 'fly-from-suitcase 0.4s ease-in forwards',
               }}>
@@ -717,8 +719,8 @@ export default function App() {
           <div className="absolute z-40" style={{
             left: `calc(50% - ${sz.w * 0.38}px)`,
             bottom: `calc(${isMobile ? 20 : 40}px + ${sz.h * 0.6}px)`,
-            width: isMobile ? 24 : 40,
-            height: isMobile ? 24 : 40,
+            width: isMobile ? 120 : 200,
+            height: isMobile ? 120 : 200,
             animation: 'fly-to-cat 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
           }}>
             <img src={flightImg} alt="" className="w-full h-full object-contain drop-shadow-lg" draggable={false} />
@@ -730,8 +732,8 @@ export default function App() {
           <div className="absolute z-40" style={{
             left: `calc(50% + ${sz.w * 0.08}px)`,
             bottom: `calc(${isMobile ? 20 : 40}px + ${sz.h * 0.5}px)`,
-            width: isMobile ? 20 : 32,
-            height: isMobile ? 20 : 32,
+            width: isMobile ? 100 : 160,
+            height: isMobile ? 100 : 160,
             animation: 'fly-to-suitcase 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
           }}>
             <img src={flightImg} alt="" className="w-full h-full object-contain drop-shadow-lg" draggable={false} />
