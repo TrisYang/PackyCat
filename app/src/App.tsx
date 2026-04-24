@@ -32,11 +32,13 @@ interface TripHistory {
 }
 
 interface PackedSlot {
-  x: number;   // % from left
-  y: number;   // % from bottom
+  x: number;   // % within inner area (0-100)
+  y: number;   // % within inner area (0-100)
   rotate: number;
-  layer: number;
+  order: number; // stacking order: higher = on top
   scale: number;
+  addedAt: number; // timestamp for pop-in animation
+  image?: string; // override image for batch-packed categories
 }
 
 type FlightPhase = 'none' | 'to-cat' | 'at-cat' | 'to-suitcase' | 'in-suitcase' | 'removing';
@@ -85,6 +87,20 @@ const ITEM_IMAGES: Record<string, string> = {
   'item-sunhat': '/item_sunhat.png',
 };
 
+/* Category-level image used when entire category is batch-packed */
+function getCategoryImage(categoryName: string): string {
+  const n = categoryName.toLowerCase();
+  if (n.includes('证件') || n.includes('财物')) return '/item_bag_documents.png';
+  if (n.includes('衣物') || n.includes('衣服') || n.includes('穿搭')) return '/item_bag_clothes.png';
+  if (n.includes('电子设备')) return '/item_bag_electronics.png';
+  if (n.includes('摄影')) return '/item_bag_camera.png';
+  if (n.includes('沙滩')) return '/item_bag_camera.png';
+  if (n.includes('户外')) return '/item_bag_camera.png';
+  if (n.includes('商务')) return '/item_bag_documents.png';
+  if (n.includes('洗护') || n.includes('健康')) return '/item_toiletries.png';
+  return '/item_pouch.png';
+}
+
 const DEST_IMAGES: Record<string, string> = {
   paris: '/dest-paris.jpg',
   tokyo: '/dest-tokyo.jpg',
@@ -112,92 +128,234 @@ function getDestImage(destination: string, purpose: string): string {
 function getItemImage(itemName: string): string {
   const n = itemName.toLowerCase();
 
+  /* ── 精准单个物品匹配 ── */
+  if (n.includes('药品') || n.includes('药')) return '/item_medicine.png';
+  if (n.includes('电脑') || n.includes('笔记本')) return '/item_laptop.png';
+  if (n.includes('一次性内裤')) return '/item_underwear_disposable.png';
+  if (n.includes('内裤')) return '/item_underwear_v2.png';
+  if (n.includes('t恤')) return '/item_tshirt.png';
+  if (n.includes('吊带上衣')) return '/item_camisole.png';
+  if (n.includes('吊带')) return '/item_camisole.png';
+  if (n.includes('裙子') || n.includes('连衣裙')) return '/item_dress_v2.png';
+  if (n.includes('泳衣')) return '/item_swimsuit_skirt.png';
+  if (n.includes('厚外套')) return '/item_jacket_thick.png';
+  if (n.includes('轻便外套') || n.includes('户外外套')) return '/item_jacket_v2.png';
+  if (n.includes('衬衫')) return '/item_shirt_v2.png';
+  if (n.includes('袜子') || n.includes('袜')) return '/item_socks_v2.png';
+  if (n.includes('雨伞') || n.includes('伞')) return '/item_umbrella.png';
+  if (n.includes('户外登山鞋') || n.includes('登山鞋')) return '/item_hiking_shoes.png';
+  if (n.includes('户外鞋子') || n.includes('户外鞋')) return '/item_hiking_shoes.png';
+  if (n.includes('拖鞋') || n.includes('人字拖') || n.includes('夹脚拖')) return '/item_flipflops.png';
+  if (n.includes('鞋') || n.includes('拖')) return '/item_shoes.png';
+  if (n.includes('洗面奶')) return '/item_facial_cleanser.png';
+  if (n.includes('化妆品')) return '/item_bag_cosmetics.png';
+  if (n.includes('睡衣')) return '/item_pajamas.png';
+  if (n.includes('首饰') || n.includes('配饰') || n.includes('珠宝')) return '/item_bag_jewelry.png';
+  if (n.includes('登山杖')) return '/item_trekking_pole.png';
+
+  /* ── 护肤品 / 洗护合集 ── */
+  if (n.includes('洗漱包') || n.includes('旅行套装') || n.includes('旅行装')) return '/item_travel_set.png';
+  if (n.includes('洗漱') || n.includes('洗护')) return '/item_toiletries.png';
+  if (n.includes('面霜') || n.includes('霜')) return '/item_cream.png';
+  if (n.includes('乳液') || n.includes('身体乳') || n.includes('护肤')) return '/item_body_lotion.png';
+  if (n.includes('防晒')) return '/item_sunscreen.png';
+
+  /* ── 帽子 ── */
+  if (n.includes('棒球帽')) return '/item_baseball_cap.png';
+  if (n.includes('户外遮阳帽') || n.includes('户外帽')) return '/item_sunhat_v2.png';
+  if (n.includes('遮阳帽') || n.includes('沙滩帽')) return '/item_sunhat.png';
+  if (n.includes('帽')) return '/item_hat.png';
+
   /* ── 证件与财物 ── */
-  if (n.includes('护照') || n.includes('身份证') || n.includes('行程单')) return ITEM_IMAGES['item-passport'];
-  if (n.includes('银行卡') || n.includes('现金') || n.includes('钱包') || n.includes('名片')) return ITEM_IMAGES['item-wallet'];
+  if (n.includes('护照')) return ITEM_IMAGES['item-passport'];
+  if (n.includes('身份证') || n.includes('行程单')) return '/item_idcard.png';
+  if (n.includes('银行卡') || n.includes('钱包') || n.includes('名片')) return ITEM_IMAGES['item-wallet'];
+  if (n.includes('现金')) return '/item_cash.png';
 
-  /* ── 衣物穿搭 ── */
-  if (n.includes('t恤') || n.includes('衬衫') || n.includes('背心') || (n.includes('衣') && !n.includes('雨衣'))) return ITEM_IMAGES['item-shirt'];
+  /* ── 衣物穿搭（兜底） ── */
+  if (n.includes('背心')) return '/item_camisole.png';
+  if ((n.includes('衣') || n.includes('衫')) && !n.includes('雨衣') && !n.includes('内衣')) return ITEM_IMAGES['item-shirt'];
   if ((n.includes('裤') || n.includes('裙')) && !n.includes('内衣')) return ITEM_IMAGES['item-pants'];
-  if (n.includes('睡衣')) return ITEM_IMAGES['item-dress'];
-  if (n.includes('袜') || n.includes('内衣')) return ITEM_IMAGES['item-socks'];
+  if (n.includes('内衣')) return '/item_bag_underwear.png';
   if (n.includes('外套') || n.includes('夹克') || n.includes('雨衣') || n.includes('西装')) return ITEM_IMAGES['item-jacket'];
-  if (n.includes('围巾') || n.includes('伞')) return ITEM_IMAGES['item-scarf'];
+  if (n.includes('围巾')) return ITEM_IMAGES['item-scarf'];
 
-  /* ── 洗护健康 ── */
-  if (n.includes('洗漱') || n.includes('牙') || n.includes('浴') || n.includes('化妆')) return ITEM_IMAGES['item-toiletries'];
+  /* ── 洗护健康（兜底） ── */
   if (n.includes('洗') || n.includes('护') || n.includes('霜') || n.includes('液') || n.includes('防晒') || n.includes('卸妆') || n.includes('精华')) return ITEM_IMAGES['item-skincare'];
-  if (n.includes('药') || n.includes('面膜') || n.includes('能量')) return ITEM_IMAGES['item-mask'];
+  if (n.includes('面膜')) return '/item_mask.png';
+  if (n.includes('能量')) return '/item_snacks.png';
 
   /* ── 电子设备 & 摄影 ── */
-  if (n.includes('相机') || n.includes('三脚架')) return ITEM_IMAGES['item-camera'];
+  if (n.includes('相机')) return ITEM_IMAGES['item-camera'];
+  if (n.includes('三脚架')) return ITEM_IMAGES['item-camera'];
   if (n.includes('充电') || n.includes('插头') || n.includes('转换') || n.includes('电池')) return ITEM_IMAGES['item-charger'];
-  if (n.includes('耳机') || n.includes('电脑') || n.includes('笔记本') || n.includes('电子') || n.includes('设备')) return ITEM_IMAGES['item-sunglasses'];
+  if (n.includes('头戴耳机')) return '/item_headphones.png';
+  if (n.includes('耳机')) return '/item_earbuds.png';
+  if (n.includes('电子') || n.includes('设备')) return ITEM_IMAGES['item-sunglasses'];
+  if (n.includes('墨镜') || n.includes('眼镜') || n.includes('太阳镜')) return '/item_sunglasses_v2.png';
 
   /* ── 鞋帽包 & 其他 ── */
-  if (n.includes('鞋') || n.includes('拖')) return ITEM_IMAGES['item-shoes'];
   if (n.includes('收纳') || n.includes('袋') || n.includes('包') || n.includes('防水') || n.includes('手机袋')) return ITEM_IMAGES['item-pouch'];
-  if (n.includes('遮阳帽') || n.includes('沙滩帽')) return ITEM_IMAGES['item-sunhat'];
-  if (n.includes('帽')) return ITEM_IMAGES['item-hat'];
 
-  return ITEM_IMAGES['item-passport'];
+  return '/item_unknown.png';
 }
 
 /* ═══════════════════════════════════════════════
-   Layered Packing Algorithm
-   Items are placed in organized layers within suitcase
+   Stacking Packing Algorithm
+   Items stack by addition order (later = higher z-index)
    ═══════════════════════════════════════════════ */
-function getItemLayer(itemName: string): number {
-  const n = itemName.toLowerCase();
-  // Layer 0 = bottom (clothes, flat items)
-  if (n.includes('t恤') || n.includes('衬衫') || n.includes('裤') || n.includes('服') || n.includes('睡衣') || n.includes('内衣') || n.includes('袜') || n.includes('鞋') || n.includes('裙') || n.includes('衫')) return 0;
-  // Layer 1 = middle (toiletry, soft items)
-  if (n.includes('洗') || n.includes('护') || n.includes('霜') || n.includes('膏') || n.includes('液') || n.includes('牙') || n.includes('防晒') || n.includes('卸妆') || n.includes('药') || n.includes('浴') || n.includes('化妆')) return 1;
-  // Layer 2 = top (hard items, electronics, documents)
-  return 2;
+function calculateSlot(totalPacked: number): PackedSlot {
+  // Split into left/right halves, leaving middle ~45-55 empty for zipper seam
+  const isLeft = Math.random() < 0.5;
+  const x = isLeft ? 12 + Math.random() * 28 : 60 + Math.random() * 28; // 12-40 or 60-88
+  const y = 24 + Math.random() * 52; // 24-76 vertical range (tighter top/bottom margins)
+  const rotate = [-4, -1, 2, 5][totalPacked % 4] + (Math.random() - 0.5) * 3;
+  const scale = 0.95 + Math.random() * 0.15;
+
+  return { x, y, rotate, order: totalPacked, scale, addedAt: Date.now() };
 }
 
-function calculateSlot(packedCountByLayer: [number, number, number], layer: number): PackedSlot {
-  const count = packedCountByLayer[layer];
-
-  // x, y in 15-85 range (15% margin to stay within suitcase inner lining)
-  const x = 15 + Math.random() * 70;
-  const y = 15 + Math.random() * 70;
-  const rotate = [-4, -1, 2, 5][count % 4] + (Math.random() - 0.5) * 3;
-  const scale = layer === 2 ? 1.05 : layer === 0 ? 0.9 : 1.0;
-
-  return { x, y, rotate, layer, scale };
+/* ═══════════════════════════════════════════════
+   Destination Type Helper
+   ═══════════════════════════════════════════════ */
+function getDestinationType(destination: string): 'domestic' | 'hongkong-macau' | 'taiwan' | 'international' {
+  const d = destination.toLowerCase();
+  if (d.includes('hong kong') || d.includes('香港') || d.includes('macau') || d.includes('macao') || d.includes('澳门')) {
+    return 'hongkong-macau';
+  }
+  if (d.includes('taiwan') || d.includes('台湾')) {
+    return 'taiwan';
+  }
+  const intlKeywords = [
+    '日本', '泰国', '韩国', '新加坡', '马来西亚', '越南', '印尼', '菲律宾', '美国', '英国', '法国', '德国', '意大利', '西班牙', '瑞士', '荷兰', '比利时', '奥地利', '捷克', '匈牙利', '波兰', '俄罗斯', '土耳其', '希腊', '葡萄牙', '瑞典', '挪威', '丹麦', '芬兰', '冰岛', '爱尔兰', '加拿大', '墨西哥', '巴西', '阿根廷', '智利', '秘鲁', '澳大利亚', '新西兰', '斐济', '马尔代夫', '迪拜', '埃及', '南非', '摩洛哥', '肯尼亚', '印度', '尼泊尔', '斯里兰卡',
+    '东京', '大阪', '京都', '北海道', '冲绳', '福冈', '名古屋', '横滨', '札幌', '神户', '广岛', '仙台',
+    '首尔', '釜山', '济州', '仁川', '大邱', '大田', '光州',
+    '曼谷', '清迈', '芭提雅', '普吉', '甲米', '华欣', '苏梅',
+    '新加坡', '吉隆坡', '槟城', '兰卡威', '马六甲',
+    '巴厘岛', '雅加达', '日惹', '泗水', '乌布', '库塔',
+    '河内', '胡志明', '岘港', '芽庄', '大叻', '富国岛',
+    '马尼拉', '宿务', '长滩', '巴拉望', '薄荷岛', '杜马盖地',
+    '金边', '暹粒', '西哈努克',
+    '万象', '琅勃拉邦', '万荣',
+    '仰光', '曼德勒', '蒲甘', '茵莱湖',
+    '加德满都', '博卡拉', '奇特旺',
+    '科伦坡', '康提', '加勒',
+    '新德里', '孟买', '斋普尔', '果阿', '班加罗尔', '瓦拉纳西', '阿格拉', '乌代布尔', '焦特布尔',
+    '迪拜', '阿布扎比',
+    '伊斯坦布尔', '卡帕多奇亚', '安塔利亚',
+    '开罗', '卢克索', '阿斯旺', '赫尔格达',
+    '卡萨布兰卡', '马拉喀什', '菲斯', '舍夫沙万',
+    '内罗毕', '蒙巴萨', '马赛马拉', '桑给巴尔', '乞力马扎罗',
+    '开普敦', '约翰内斯堡', '德班',
+    '巴黎', '尼斯', '里昂', '马赛', '戛纳', '波尔多',
+    '伦敦', '爱丁堡', '曼彻斯特', '利物浦', '格拉斯哥',
+    '柏林', '慕尼黑', '法兰克福', '汉堡', '科隆',
+    '罗马', '米兰', '威尼斯', '佛罗伦萨', '那不勒斯',
+    '马德里', '巴塞罗那', '塞维利亚', '格拉纳达',
+    '阿姆斯特丹', '鹿特丹',
+    '苏黎世', '日内瓦', '卢塞恩',
+    '维也纳', '萨尔茨堡', '因斯布鲁克',
+    '布拉格', '布达佩斯',
+    '雅典', '圣托里尼', '米科诺斯',
+    '里斯本', '波尔图',
+    '雷克雅未克', '蓝湖',
+    '斯德哥尔摩', '奥斯陆', '卑尔根', '特罗姆瑟', '哥本哈根', '赫尔辛基', '罗瓦涅米',
+    '都柏林', '高威',
+    '华沙', '克拉科夫',
+    '莫斯科', '圣彼得堡',
+    '里约', '圣保罗', '萨尔瓦多',
+    '布宜诺斯艾利斯', '门多萨', '巴里洛切', '乌斯怀亚', '伊瓜苏',
+    '圣地亚哥', '瓦尔帕莱索', '百内', '复活节岛',
+    '利马', '库斯科', '马丘比丘',
+    '波哥大', '麦德林', '卡塔赫纳',
+    '基多', '瓜亚基尔', '加拉帕戈斯',
+    '拉巴斯', '乌尤尼',
+    '蒙得维的亚', '埃斯特角城',
+    '亚松森',
+    '加拉加斯', '玛格丽塔', '天使瀑布',
+    '墨西哥城', '坎昆', '图卢姆',
+    '哈瓦那', '巴拉德罗',
+    '金斯敦', '蒙特哥贝',
+    '拿骚', '天堂岛',
+    '布里奇顿',
+    '纽约', '洛杉矶', '旧金山', '芝加哥', '波士顿', '迈阿密', '西雅图', '拉斯维加斯', '华盛顿', '费城', '圣迭戈', '火奴鲁鲁', '亚特兰大', '丹佛', '底特律',
+    '温哥华', '多伦多', '蒙特利尔', '卡尔加里',
+    '悉尼', '墨尔本', '布里斯班', '珀斯', '阿德莱德', '凯恩斯', '黄金海岸',
+    '奥克兰', '惠灵顿', '基督城', '皇后镇', '罗托鲁瓦',
+    '楠迪', '丹娜努', '玛玛努卡',
+    '科罗尔', '水母湖',
+    '塞班', '军舰岛',
+    '帕皮提', '波拉波拉', '茉莉雅',
+    '南极', '南极洲',
+    '北极',
+    '留尼汪', '马约特', '马提尼克', '瓜德罗普', '法属圭亚那',
+    '英属维尔京', '美属维尔京', '安圭拉', '蒙特塞拉特',
+    '安提瓜', '巴布达', '多米尼克', '圣卢西亚', '圣文森特', '格林纳丁斯', '格林纳达', '巴巴多斯', '特立尼达', '多巴哥',
+    '阿鲁巴', '库拉索', '博奈尔',
+    '福克兰', '南乔治亚',
+    '朝鲜', '平壤', '板门店', '开城', '妙香山', '金刚山',
+    '蒙古', '乌兰巴托', '戈壁',
+    '文莱', '斯里巴加湾',
+    '东帝汶', '帝力',
+    '巴布亚新几内亚', '莫尔兹比港',
+    '所罗门群岛', '霍尼亚拉',
+    '瓦努阿图', '维拉港', '塔纳岛',
+    '新喀里多尼亚', '努美阿',
+    '萨摩亚', '阿皮亚',
+    '汤加', '努库阿洛法',
+    '基里巴斯', '瑙鲁', '图瓦卢',
+    '密克罗尼西亚', '马绍尔群岛',
+    '库克群岛', '纽埃', '托克劳', '皮特凯恩',
+    '美属萨摩亚',
+    '关岛', '天宁', '罗塔',
+    '复活节岛', '加拉帕戈斯',
+    '关岛', '北马里亚纳',
+    '科索沃', '德涅斯特河沿岸', '阿布哈兹', '南奥塞梯', '纳戈尔诺-卡拉巴赫', '北塞浦路斯', '西撒哈拉', '巴勒斯坦', '索马里兰', '索马里',
+    '吉布提', '厄立特里亚', '苏丹', '南苏丹', '乍得', '尼日尔', '马里', '布基纳法索', '毛里塔尼亚', '塞内加尔', '冈比亚', '几内亚比绍', '几内亚', '塞拉利昂', '利比里亚', '科特迪瓦', '加纳', '多哥', '贝宁', '尼日利亚',
+    '喀麦隆', '中非', '赤道几内亚', '加蓬', '刚果', '刚果民主共和国', '圣多美和普林西比', '安哥拉', '赞比亚', '马拉维', '莫桑比克', '科摩罗', '塞舌尔', '毛里求斯'
+  ];
+  if (intlKeywords.some(k => d.includes(k))) return 'international';
+  return 'domestic';
 }
 
 /* ═══════════════════════════════════════════════
    Smart Checklist Generator
    ═══════════════════════════════════════════════ */
 function generateChecklist(config: TripConfig): Category[] {
-  const { days, purpose } = config;
+  const { days, purpose, destination } = config;
   const d = Math.max(1, Math.min(days, 30));
+  const destType = getDestinationType(destination);
+
+  const idDoc = destType === 'international' ? '护照'
+              : destType === 'hongkong-macau' ? '港澳通行证'
+              : destType === 'taiwan' ? '台湾通行证'
+              : '身份证';
+
+  const docItems: ChecklistItem[] = [{ id: uid(), text: idDoc, packed: false }];
+  if (destType !== 'domestic') {
+    docItems.push({ id: uid(), text: '银行卡', packed: false });
+    docItems.push({ id: uid(), text: '现金', packed: false });
+  }
 
   const baseCategories: Category[] = [
     {
       id: uid(), name: '证件与财物', icon: 'shield',
-      items: [
-        { id: uid(), text: '身份证', packed: false },
-        { id: uid(), text: '护照', packed: false },
-        { id: uid(), text: '银行卡', packed: false },
-        { id: uid(), text: '现金', packed: false },
-        { id: uid(), text: '行程单', packed: false },
-      ],
+      items: docItems,
     },
     {
       id: uid(), name: '衣物穿搭', icon: 'shirt',
       items: [
-        { id: uid(), text: `轻便T恤 x${Math.min(d, 5)}`, packed: false },
-        { id: uid(), text: d > 3 ? '薄款长袖衬衫' : '内搭背心', packed: false },
-        { id: uid(), text: '舒适长裤', packed: false },
-        { id: uid(), text: '睡衣套装', packed: false },
-        { id: uid(), text: '内衣裤 x' + Math.min(d + 1, 7), packed: false },
-        { id: uid(), text: '袜子 x' + Math.min(d + 1, 7), packed: false },
         { id: uid(), text: '轻便外套', packed: false },
-        { id: uid(), text: '折叠雨伞', packed: false },
+        { id: uid(), text: `轻便T恤 x${Math.min(d, 5)}`, packed: false },
+        { id: uid(), text: d > 3 ? '长袖上衣' : '吊带', packed: false },
+        { id: uid(), text: '舒适长裤', packed: false },
+        { id: uid(), text: '裙子/连衣裙', packed: false },
+        { id: uid(), text: '睡衣套装', packed: false },
+        { id: uid(), text: '一次性内裤 x' + Math.min(d + 1, 7), packed: false },
+        { id: uid(), text: '内衣 x' + Math.min(d + 1, 7), packed: false },
+        { id: uid(), text: '袜子 x' + Math.min(d + 1, 7), packed: false },
+        { id: uid(), text: purpose === 'hiking' ? '户外帽' : '帽子', packed: false },
+        { id: uid(), text: '雨伞', packed: false },
       ],
     },
     {
@@ -205,9 +363,9 @@ function generateChecklist(config: TripConfig): Category[] {
       items: [
         { id: uid(), text: '旅行装洗面奶', packed: false },
         { id: uid(), text: '保湿乳液', packed: false },
-        { id: uid(), text: '牙刷牙膏', packed: false },
         { id: uid(), text: '防晒霜', packed: false },
         { id: uid(), text: '卸妆水', packed: false },
+        { id: uid(), text: '化妆品', packed: false },
         { id: uid(), text: '常用药品', packed: false },
       ],
     },
@@ -215,9 +373,8 @@ function generateChecklist(config: TripConfig): Category[] {
       id: uid(), name: '电子设备', icon: 'smartphone',
       items: [
         { id: uid(), text: '充电宝', packed: false },
-        { id: uid(), text: '充电线', packed: false },
-        { id: uid(), text: '降噪耳机', packed: false },
-        { id: uid(), text: '转换插头', packed: false },
+        { id: uid(), text: '耳机', packed: false },
+        ...(destType !== 'domestic' ? [{ id: uid(), text: '转换插头', packed: false }] : []),
       ],
     },
   ];
@@ -235,7 +392,7 @@ function generateChecklist(config: TripConfig): Category[] {
       id: uid(), name: '沙滩装备', icon: 'umbrella', isBonus: true,
       items: [
         { id: uid(), text: '泳衣', packed: false },
-        { id: uid(), text: '沙滩拖鞋', packed: false },
+        { id: uid(), text: '拖鞋', packed: false },
         { id: uid(), text: '防水手机袋', packed: false },
         { id: uid(), text: '遮阳帽', packed: false },
       ],
@@ -305,13 +462,11 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
 export default function App() {
   /* ── State ── */
   const [tripConfig, setTripConfig] = useState<TripConfig>({
-    destination: '', days: 5, purpose: 'city',
+    destination: '', days: 3, purpose: 'city',
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
-  const [flight, setFlight] = useState<FlightState>({ itemId: '', phase: 'none' });
   const [catState, setCatState] = useState<CatAction>('idle');
-  const [handItemId, setHandItemId] = useState<string | null>(null);
   const [showPoster, setShowPoster] = useState(false);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -325,8 +480,19 @@ export default function App() {
   const [generating, setGenerating] = useState(false);
   const [addingCat, setAddingCat] = useState(false);
   const [newCatName, setNewCatName] = useState('');
+  const [isEditing, setIsEditing] = useState(true);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [hideListInModal, setHideListInModal] = useState(true);
+  const [completionCardUrl, setCompletionCardUrl] = useState<string | null>(null);
+  const [generatingCard, setGeneratingCard] = useState(false);
+  const randomFooterRef = useRef<string>('');
+  if (!randomFooterRef.current) {
+    const footers = ['🧳 麻麻要不要偷偷把我一起打包带走呀~', '🏠 在外面要记得想我早点回家陪小猫宝宝~', '😿 外面再好也不要忘记家里等你的小猫咪哦~'];
+    randomFooterRef.current = footers[Math.floor(Math.random() * footers.length)];
+  }
 
   const posterRef = useRef<HTMLDivElement>(null);
+  const completionCardRef = useRef<HTMLDivElement>(null);
 
   /* ── Derived ── */
   const allItems = useMemo(() => categories.flatMap(c => c.items), [categories]);
@@ -334,22 +500,6 @@ export default function App() {
   const allPacked = allItems.length > 0 && allItems.every(i => i.packed);
   const packedCount = packedItems.length;
   const totalCount = allItems.length;
-
-  /* ── Load from localStorage ── */
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('purrpack-current');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.categories?.length > 0) {
-          setCategories(parsed.categories);
-          setTripConfig(parsed.config || tripConfig);
-          setExpandedCats(new Set(parsed.categories.map((c: Category) => c.id)));
-        }
-      }
-    } catch { /* ignore */ }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   /* ── Persist ── */
   useEffect(() => {
@@ -372,6 +522,7 @@ export default function App() {
       setSuitcaseClosed(false);
       setPackedSlots({});
       setGenerating(false);
+      setIsEditing(false);
       const entry: TripHistory = {
         id: uid(),
         config: { ...tripConfig },
@@ -382,7 +533,7 @@ export default function App() {
     }, 600);
   }, [tripConfig]);
 
-  /* ── Toggle Item with full flight animation ── */
+  /* ── Toggle Item: simple pack/unpack, no cat animation ── */
   const toggleItem = useCallback((catId: string, itemId: string) => {
     setCategories(prev => {
       const next = prev.map(cat => {
@@ -393,58 +544,13 @@ export default function App() {
             if (item.id !== itemId) return item;
             const newPacked = !item.packed;
             if (newPacked) {
-              /* ═══ PACK flow: checklist → cat's hand → suitcase ═══ */
-              // Phase 1: item flies to cat (0-300ms)
-              setFlight({ itemId, phase: 'to-cat' });
-              setCatState('reaching');
-
-              // Phase 2: item lands on cat's hand (300ms)
-              setTimeout(() => {
-                setFlight({ itemId, phase: 'at-cat' });
-                setHandItemId(itemId);
-                setCatState('holding');
-              }, 300);
-
-              // Phase 3: item flies from cat to suitcase (600-1100ms)
-              setTimeout(() => {
-                setFlight({ itemId, phase: 'to-suitcase' });
-                setCatState('placing');
-                setHandItemId(null);
-              }, 600);
-
-              // Phase 4: item lands in suitcase, assign slot (1100ms)
-              setTimeout(() => {
-                setFlight({ itemId, phase: 'in-suitcase' });
-                setCatState('idle');
-                const layer = getItemLayer(item.text);
-                const currentCounts: [number, number, number] = [0, 0, 0];
-                setPackedSlots(currentSlots => {
-                  for (const sid of Object.keys(currentSlots)) {
-                    const s = currentSlots[sid];
-                    if (s) currentCounts[s.layer]++;
-                  }
-                  const slot = calculateSlot(currentCounts, layer);
-                  return { ...currentSlots, [itemId]: slot };
-                });
-                // Clear flight after a brief pause
-                setTimeout(() => setFlight({ itemId: '', phase: 'none' }), 200);
-              }, 1100);
-
+              setPackedSlots(currentSlots => {
+                const totalPacked = Object.keys(currentSlots).length;
+                const slot = calculateSlot(totalPacked);
+                return { ...currentSlots, [itemId]: { ...slot, image: getItemImage(item.text) } };
+              });
             } else {
-              /* ═══ UNPACK flow: suitcase → cat's hand → away ═══ */
-              setFlight({ itemId, phase: 'removing' });
-              setCatState('removing');
-              setHandItemId(itemId);
-
-              // Remove slot immediately (item starts leaving)
               setPackedSlots(s => { const n = { ...s }; delete n[itemId]; return n; });
-
-              // After removal animation, clear
-              setTimeout(() => {
-                setFlight({ itemId: '', phase: 'none' });
-                setCatState('idle');
-                setHandItemId(null);
-              }, 500);
             }
             return { ...item, packed: newPacked };
           }),
@@ -460,40 +566,41 @@ export default function App() {
       const cat = prev.find(c => c.id === catId);
       if (!cat) return prev;
       const allChecked = cat.items.every(i => i.packed);
+      const itemsToPack: string[] = [];
+      const itemsToUnpack: string[] = [];
+
       const next = prev.map(c => {
         if (c.id !== catId) return c;
         return {
           ...c,
-          items: c.items.map((item, idx) => {
+          items: c.items.map(item => {
             const newPacked = !allChecked;
-            if (newPacked && !item.packed) {
-              const delay = idx * 600; // stagger each item
-              setTimeout(() => {
-                // Quick pack: to-cat → at-cat → to-suitcase → in-suitcase
-                setFlight({ itemId: item.id, phase: 'to-cat' });
-                setCatState('reaching');
-                setTimeout(() => { setFlight({ itemId: item.id, phase: 'at-cat' }); setHandItemId(item.id); setCatState('holding'); }, 200);
-                setTimeout(() => { setFlight({ itemId: item.id, phase: 'to-suitcase' }); setHandItemId(null); setCatState('placing'); }, 400);
-                setTimeout(() => {
-                  setFlight({ itemId: item.id, phase: 'in-suitcase' });
-                  setCatState(idx === cat.items.length - 1 ? 'idle' : 'reaching');
-                  const layer = getItemLayer(item.text);
-                  setPackedSlots(currentSlots => {
-                    const counts: [number, number, number] = [0, 0, 0];
-                    for (const sid of Object.keys(currentSlots)) { const s = currentSlots[sid]; if (s) counts[s.layer]++; }
-                    const slot = calculateSlot(counts, layer);
-                    return { ...currentSlots, [item.id]: slot };
-                  });
-                  setTimeout(() => setFlight({ itemId: '', phase: 'none' }), 150);
-                }, 800);
-              }, delay);
-            } else if (!newPacked && item.packed) {
-              setPackedSlots(s => { const n = { ...s }; delete n[item.id]; return n; });
-            }
+            if (newPacked && !item.packed) itemsToPack.push(item.id);
+            if (!newPacked && item.packed) itemsToUnpack.push(item.id);
             return { ...item, packed: newPacked };
           }),
         };
       });
+
+      // Batch add/remove slots so animation triggers only once
+      // When entire category is packed, show only ONE representative image
+      if (itemsToPack.length > 0) {
+        const catImage = getCategoryImage(cat.name);
+        setPackedSlots(currentSlots => {
+          const newSlots = { ...currentSlots };
+          const totalPacked = Object.keys(newSlots).length;
+          newSlots[itemsToPack[0]] = { ...calculateSlot(totalPacked), image: catImage };
+          return newSlots;
+        });
+      }
+      if (itemsToUnpack.length > 0) {
+        setPackedSlots(currentSlots => {
+          const newSlots = { ...currentSlots };
+          for (const itemId of itemsToUnpack) delete newSlots[itemId];
+          return newSlots;
+        });
+      }
+
       return next;
     });
   }, []);
@@ -569,7 +676,7 @@ export default function App() {
   const downloadPoster = useCallback(() => {
     if (!posterUrl) return;
     const link = document.createElement('a');
-    link.download = `PurrPack-${tripConfig.destination || 'trip'}.png`;
+    link.download = `PackyCat-${tripConfig.destination || 'trip'}.png`;
     link.href = posterUrl;
     link.click();
   }, [posterUrl, tripConfig.destination]);
@@ -579,20 +686,47 @@ export default function App() {
     if (allPacked && totalCount > 0 && !suitcaseClosed) {
       setCatState('jumping');
       const t = setTimeout(() => setCatState('idle'), 800);
+      setShowCompletionModal(true);
       return () => clearTimeout(t);
     }
   }, [allPacked, totalCount, suitcaseClosed]);
 
+  /* ── Generate completion card image ── */
+  useEffect(() => {
+    if (showCompletionModal && completionCardRef.current) {
+      setGeneratingCard(true);
+      // Wait for DOM to render
+      setTimeout(() => {
+        import('html2canvas').then(({ default: html2canvas }) => {
+          html2canvas(completionCardRef.current!, {
+            scale: 2,
+            backgroundColor: '#FFFBF2',
+            useCORS: true,
+            logging: false,
+          }).then(canvas => {
+            setCompletionCardUrl(canvas.toDataURL('image/png'));
+            setGeneratingCard(false);
+          }).catch(err => {
+            console.error('html2canvas failed:', err);
+            setGeneratingCard(false);
+          });
+        }).catch(err => {
+          console.error('Failed to load html2canvas:', err);
+          setGeneratingCard(false);
+        });
+      }, 100);
+    }
+  }, [showCompletionModal, hideListInModal]);
+
   /* ═══════════════════════════════════════════════
-     Suitcase size by days
+     Suitcase size by days — 2 sizes only
      ═══════════════════════════════════════════════ */
   const suitcaseSize = useMemo(() => {
-    const d = tripConfig.days || 5;
-    // Flat open suitcase: larger to dominate the scene
-    if (d <= 3) return { desktop: { w: 520, h: 347 }, mobile: { w: 200, h: 133 } };
-    if (d <= 7) return { desktop: { w: 600, h: 400 }, mobile: { w: 240, h: 160 } };
-    if (d <= 14) return { desktop: { w: 660, h: 440 }, mobile: { w: 280, h: 187 } };
-    return { desktop: { w: 720, h: 480 }, mobile: { w: 320, h: 213 } };
+    const d = tripConfig.days || 3;
+    // Small: ≤5 days
+    // Large: ≥6 days
+    if (d <= 5) return { desktop: { w: 580, h: 387 }, mobile: { w: 300, h: 200 } };
+    return { desktop: { w: 665, h: 444 }, mobile: { w: 361, h: 240 } };
   }, [tripConfig.days]);
 
   /* ═══════════════════════════════════════════════
@@ -602,19 +736,18 @@ export default function App() {
   const ScenePanel = ({ isMobile = false }: { isMobile?: boolean }) => {
     const sz = isMobile ? suitcaseSize.mobile : suitcaseSize.desktop;
     const catW = isMobile ? 55 : 140; // fixed cat size regardless of suitcase
-    const flightItem = flight.itemId ? allItems.find(i => i.id === flight.itemId) : null;
-    const flightImg = flightItem ? getItemImage(flightItem.text) : '';
-    const br = isMobile ? 8 : 16;
-    const days = tripConfig.days || 5;
-    const suitcaseImg = days <= 3 ? '/v2_suitcase_small_black.png' : days <= 7 ? '/v2_suitcase_medium_black.png' : '/v2_suitcase_large_black.png';
 
-    // Suitcase inner lining area (pixels analyzed from each suitcase image)
+    const br = isMobile ? 8 : 16;
+    const days = tripConfig.days || 3;
+    const isSmallSize = days <= 5;
+    const suitcaseImg = isSmallSize ? '/v2_suitcase_medium_black.png' : '/v2_suitcase_large_black.png';
+
+    // Suitcase inner lining area (pixel-analyzed; keeps items within outer frame)
     const SUITCASE_INSET = {
-      small:  { left: 14.4, right: 14.0, top: 22.9, bottom: 22.9 },
-      medium: { left: 11.1, right:  8.9, top: 14.8, bottom: 15.0 },
-      large:  { left:  9.7, right:  8.3, top: 16.2, bottom: 16.3 },
+      small: { left: 11.1, right:  8.9, top: 14.8, bottom: 15.0 },
+      large: { left:  9.7, right:  8.3, top: 16.2, bottom: 16.3 },
     };
-    const inset = days <= 3 ? SUITCASE_INSET.small : days <= 7 ? SUITCASE_INSET.medium : SUITCASE_INSET.large;
+    const inset = isSmallSize ? SUITCASE_INSET.small : SUITCASE_INSET.large;
     const innerLeft = inset.left;
     const innerRight = 100 - inset.right;
     const innerTop = inset.top;
@@ -637,7 +770,7 @@ export default function App() {
       catState === 'pulling' ? 'cat-pulling' : '';
 
     return (
-      <div className={`scene-panel relative overflow-hidden ${isMobile ? 'flex md:hidden' : 'hidden md:flex flex-1'}`}>
+      <div className={`scene-panel relative overflow-hidden ${isMobile ? 'flex md:hidden aspect-[16/9] w-full flex-shrink-0' : 'hidden md:flex flex-1'}`}>
 
         {/* ══════ LAYER 1: Background (always fixed) ══════ */}
         <div className="absolute inset-0" style={{ backgroundImage: 'url(/room-floor-2.png)', backgroundSize: 'cover', backgroundPosition: 'center bottom', backgroundRepeat: 'no-repeat' }} />
@@ -661,61 +794,40 @@ export default function App() {
           {/* Suitcase flat image */}
           <img src={suitcaseImg} alt="行李箱" className="w-full h-full object-contain" draggable={false} style={{ position: 'relative', zIndex: 10 }} />
 
-          {/* Items placed inside suitcase inner lining — no overflow clipping */}
+          {/* Items placed inside suitcase inner lining — stacked by order */}
           {Object.entries(packedSlots).map(([itemId, slot]) => {
             const item = allItems.find(i => i.id === itemId);
             if (!item) return null;
-            // Map slot.x/y (15-85) to inner lining area
-            const x = innerLeft + ((slot.x - 15) / 70) * innerWidth;
-            const y = innerBottom + ((slot.y - 15) / 70) * innerHeight;
-            const itemSize = isMobile ? 70 : (22 + slot.layer * 3) * 5;
+            // Map slot.x/y (0-100) to inner lining area, use top positioning
+            const x = innerLeft + (slot.x / 100) * innerWidth;
+            const y = innerTop + (slot.y / 100) * innerHeight;
+            const itemSize = isMobile ? 64 : 98;
+            const isNew = Date.now() - slot.addedAt < 500;
+            const imgPath = slot.image || getItemImage(item.text);
+            const extraScale = (imgPath === '/item_bag_documents.png' || imgPath === '/item_laptop.png') ? 1.1 : 1;
             return (
               <div key={itemId} className="packed-item-visual" style={{
                 position: 'absolute',
                 left: `${x}%`,
-                bottom: `${y}%`,
+                top: `${y}%`,
                 width: itemSize, height: itemSize,
-                zIndex: 20 + slot.layer * 25,
-                transform: `translate(-50%, -50%) rotate(${slot.rotate}deg)`,
+                zIndex: 20 + slot.order * 5,
+                transform: `translate(-50%, -50%) rotate(${slot.rotate}deg) scale(${slot.scale * extraScale})`,
               }}>
-                <img src={getItemImage(item.text)} alt={item.text} className="w-full h-full object-contain" draggable={false} />
+                <div className="w-full h-full" style={isNew ? { animation: 'item-pop-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards' } : undefined}>
+                  <img src={imgPath} alt={item.text} className="w-full h-full object-contain" draggable={false} />
+                </div>
               </div>
             );
           })}
 
-          {/* === Cat lying inside suitcase inner area — fixed corner === */}
-          <div className={`absolute z-30 ${catAnimClass}`} style={{
+          {/* === Cat lying inside suitcase inner area — on top of items === */}
+          <div className={`absolute z-[100] ${catAnimClass}`} style={{
             left: `${catLeft}%`,
             top: `${catTop}%`,
             width: catW,
           }}>
             <img src="/cat-sleeping.png" alt="小猫管家" style={{ width: '100%', height: 'auto' }} className="object-contain drop-shadow-lg" draggable={false} />
-
-            {/* Item held in cat's hand */}
-            {handItemId && flight.phase === 'at-cat' && flightItem && (
-              <div className="absolute" style={{
-                left: '30%', top: '20%',
-                width: isMobile ? 100 : 150,
-                height: isMobile ? 100 : 150,
-                zIndex: 35,
-                animation: 'fly-to-cat 0.3s ease-out forwards',
-              }}>
-                <img src={flightImg} alt="" className="w-full h-full object-contain drop-shadow-md" draggable={false} />
-              </div>
-            )}
-
-            {/* Item being removed */}
-            {handItemId && flight.phase === 'removing' && flightItem && (
-              <div className="absolute" style={{
-                left: '30%', top: '20%',
-                width: isMobile ? 100 : 150,
-                height: isMobile ? 100 : 150,
-                zIndex: 35,
-                animation: 'fly-from-suitcase 0.4s ease-in forwards',
-              }}>
-                <img src={flightImg} alt="" className="w-full h-full object-contain drop-shadow-md" draggable={false} />
-              </div>
-            )}
           </div>
 
           {/* Closed lid overlay (right half only) */}
@@ -727,33 +839,6 @@ export default function App() {
             </div>
           )}
         </div>
-
-        {/* ══════ LAYER 4: Flying Items ══════ */}
-        {/* Item flying from checklist TO cat's hand (left half corner) */}
-        {flight.phase === 'to-cat' && flightItem && (
-          <div className="absolute z-40" style={{
-            left: `calc(50% - ${sz.w * 0.38}px)`,
-            bottom: `calc(${isMobile ? 20 : 40}px + ${sz.h * 0.6}px)`,
-            width: isMobile ? 120 : 200,
-            height: isMobile ? 120 : 200,
-            animation: 'fly-to-cat 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
-          }}>
-            <img src={flightImg} alt="" className="w-full h-full object-contain drop-shadow-lg" draggable={false} />
-          </div>
-        )}
-
-        {/* Item flying FROM cat's hand TO inside suitcase (right half) */}
-        {flight.phase === 'to-suitcase' && flightItem && (
-          <div className="absolute z-40" style={{
-            left: `calc(50% + ${sz.w * 0.08}px)`,
-            bottom: `calc(${isMobile ? 20 : 40}px + ${sz.h * 0.5}px)`,
-            width: isMobile ? 100 : 160,
-            height: isMobile ? 100 : 160,
-            animation: 'fly-to-suitcase 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
-          }}>
-            <img src={flightImg} alt="" className="w-full h-full object-contain drop-shadow-lg" draggable={false} />
-          </div>
-        )}
 
         {/* ══════ UI Overlay ══════ */}
         {categories.length > 0 && (
@@ -772,12 +857,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Completion Text */}
-        {allPacked && totalCount > 0 && (
-          <div className="absolute bottom-1 md:bottom-3 left-0 right-0 z-50 text-center fade-in-up">
-            <p className="text-xs md:text-base font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--rose)' }}>全部收拾完毕！</p>
-          </div>
-        )}
+
       </div>
     );
   };
@@ -791,11 +871,9 @@ export default function App() {
       <header className="h-14 flex items-center justify-between px-4 md:px-6 z-20 relative"
         style={{ background: 'rgba(255,251,242,0.85)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(242,212,200,0.3)' }}>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--peach)' }}>
-            <Icon name="paw" size={16} />
-          </div>
+          <img src="/logo.png" alt="Logo" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
           <span className="text-base font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--gray-dark)' }}>
-            PurrPack
+            拾箱小猫 PackyCat
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -825,37 +903,59 @@ export default function App() {
         <div className="control-panel flex-1 md:flex-none md:w-[320px] lg:w-[340px] flex flex-col overflow-hidden min-h-0"
           style={{ borderRight: '1px solid rgba(242,212,200,0.25)' }}>
 
-          {/* Input Section */}
+          {/* Input Section / Trip Header */}
           <div className="px-4 md:px-5 pt-3 md:pt-4 pb-2 md:pb-3 flex-shrink-0">
-            <div className="grid grid-cols-2 gap-2 md:gap-2.5 mb-2 md:mb-2.5">
-              <input className="cute-input col-span-1" placeholder="目的地..."
-                value={tripConfig.destination}
-                onChange={e => setTripConfig(p => ({ ...p, destination: e.target.value }))}
-              />
-              <input className="cute-input col-span-1" type="number" min={1} max={30} placeholder="天数"
-                value={tripConfig.days || ''}
-                onChange={e => setTripConfig(p => ({ ...p, days: parseInt(e.target.value) || 1 }))}
-              />
-            </div>
-            <select className="cute-select w-full mb-2 md:mb-3"
-              value={tripConfig.purpose}
-              onChange={e => setTripConfig(p => ({ ...p, purpose: e.target.value }))}>
-              {PURPOSES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-            </select>
-            <button className="cute-btn w-full flex items-center justify-center gap-2"
-              onClick={handleGenerate}
-              disabled={!tripConfig.destination.trim() || generating}
-              style={{ opacity: !tripConfig.destination.trim() || generating ? 0.6 : 1 }}>
-              {generating ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" />
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                </span>
-              ) : (
-                <><Icon name="sparkles" size={16} /> 生成清单</>
-              )}
-            </button>
+            {isEditing ? (
+              <>
+                <div className="grid grid-cols-2 gap-2 md:gap-2.5 mb-2 md:mb-2.5">
+                  <input className="cute-input col-span-1" placeholder="目的地..."
+                    value={tripConfig.destination}
+                    onChange={e => setTripConfig(p => ({ ...p, destination: e.target.value }))}
+                  />
+                  <input className="cute-input col-span-1" type="number" min={1} max={30} placeholder="天数"
+                    value={tripConfig.days || ''}
+                    onChange={e => setTripConfig(p => ({ ...p, days: parseInt(e.target.value) || 1 }))}
+                  />
+                </div>
+                <select className="cute-select w-full mb-2 md:mb-3"
+                  value={tripConfig.purpose}
+                  onChange={e => setTripConfig(p => ({ ...p, purpose: e.target.value }))}>
+                  {PURPOSES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                </select>
+                <button className="cute-btn w-full flex items-center justify-center gap-2"
+                  onClick={handleGenerate}
+                  disabled={!tripConfig.destination.trim() || generating}
+                  style={{ background: '#F2A8A0', opacity: !tripConfig.destination.trim() || generating ? 0.6 : 1 }}>
+                  {generating ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" />
+                      <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                      <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    </span>
+                  ) : (
+                    <><Icon name="sparkles" size={16} /> 生成清单</>
+                  )}
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <h2 className="text-sm md:text-base font-bold truncate" style={{ fontFamily: 'var(--font-display)', color: 'var(--gray-dark)' }}>
+                    {tripConfig.destination}{tripConfig.days}日游
+                  </h2>
+                  <p className="text-[11px]" style={{ color: 'var(--gray-mid)' }}>
+                    {PURPOSES.find(p => p.value === tripConfig.purpose)?.label}
+                  </p>
+                </div>
+                <button
+                  className="icon-btn flex-shrink-0 ml-2"
+                  onClick={() => setIsEditing(true)}
+                  title="修改行程"
+                >
+                  <Icon name="undo" size={16} />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Progress */}
@@ -878,7 +978,7 @@ export default function App() {
               <div className="flex flex-col items-center justify-center h-full text-center opacity-40">
                 <Icon name="paw" size={40} />
                 <p className="mt-3 text-sm" style={{ color: 'var(--gray-mid)' }}>
-                  输入目的地和天数<br />让小猫管家为你整理行李
+                  输入目的地和天数<br />让拾箱小猫 PackyCat 为你整理行李
                 </p>
               </div>
             )}
@@ -887,7 +987,7 @@ export default function App() {
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center animate-pulse" style={{ background: 'var(--peach)' }}>
                   <Icon name="paw" size={20} />
                 </div>
-                <p className="mt-3 text-sm" style={{ color: 'var(--gray-mid)' }}>小猫管家正在思考...</p>
+                <p className="mt-3 text-sm" style={{ color: 'var(--gray-mid)' }}>拾箱小猫 PackyCat 正在思考...</p>
               </div>
             )}
 
@@ -1030,6 +1130,68 @@ export default function App() {
         </div>
       )}
 
+
+      {/* ══════ Completion Modal ══════ */}
+      {showCompletionModal && (
+        <div className="modal-overlay" style={{ zIndex: 200, alignItems: 'flex-start', paddingTop: '5vh', paddingBottom: '5vh', overflowY: 'auto' }} onClick={() => setShowCompletionModal(false)}>
+          <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-4" onClick={e => e.stopPropagation()}>
+            {/* Generated card image */}
+            {generatingCard ? (
+              <div className="bg-white rounded-2xl shadow-xl p-8 flex items-center justify-center" style={{ minHeight: 300 }}>
+                <div className="w-10 h-10 rounded-full animate-pulse" style={{ background: 'var(--peach)' }} />
+              </div>
+            ) : completionCardUrl ? (
+              <img
+                src={completionCardUrl}
+                alt="收拾完毕"
+                className="w-full rounded-2xl shadow-xl"
+                style={{ objectFit: 'contain' }}
+              />
+            ) : null}
+            {/* Checkbox */}
+            <label className="flex items-center gap-2 cursor-pointer bg-white/80 backdrop-blur-sm rounded-xl px-4 py-2">
+              <input
+                type="checkbox"
+                className="custom-checkbox"
+                checked={hideListInModal}
+                onChange={e => setHideListInModal(e.target.checked)}
+              />
+              <span className="text-sm" style={{ color: 'var(--gray-mid)' }}>隐藏清单内容</span>
+            </label>
+            {/* Buttons */}
+            <div className="flex gap-2 w-full">
+              <button className="cute-btn-secondary cute-btn flex-1 flex items-center justify-center gap-2 text-sm" onClick={() => setShowCompletionModal(false)}>
+                <Icon name="x" size={15} /> 返回清单
+              </button>
+              {completionCardUrl && (
+                <button className="cute-btn flex-1 flex items-center justify-center gap-2 text-sm" onClick={() => {
+                  const link = document.createElement('a');
+                  link.download = `PackyCat-${tripConfig.destination || 'trip'}.png`;
+                  link.href = completionCardUrl;
+                  link.click();
+                }}>
+                  <Icon name="download" size={15} /> 保存图片
+                </button>
+              )}
+            </div>
+            <button
+              className="w-full cute-btn flex items-center justify-center gap-2 text-sm"
+              style={{ background: 'var(--sky)' }}
+              onClick={() => {
+                setShowCompletionModal(false);
+                setCategories([]);
+                setPackedSlots({});
+                setSuitcaseClosed(false);
+                setIsEditing(true);
+                setTripConfig({ destination: '', days: 3, purpose: 'city' });
+              }}
+            >
+              <Icon name="sparkles" size={15} /> 生成下一次旅行清单
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ══════ Poster Modal ══════ */}
       {showPoster && (
         <div className="modal-overlay" onClick={() => { setShowPoster(false); setSuitcaseClosed(false); }}>
@@ -1056,6 +1218,54 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* ══════ Hidden Completion Card Template ══════ */}
+      <div ref={completionCardRef} style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: 400, background: '#FFFBF2', padding: 24 }}>
+        <img src="/20_lie_on_top.png" alt="" style={{ width: '100%', height: 'auto', borderRadius: 16, marginBottom: 16 }} />
+        <h2 style={{ fontFamily: 'var(--font-display)', color: 'var(--gray-dark)', fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 6 }}>
+          猫工打包已完成！✨
+        </h2>
+        <p style={{ fontFamily: 'var(--font-body)', color: 'var(--gray-mid)', fontSize: 13, textAlign: 'center', marginBottom: 16 }}>
+          辛苦本猫猫忙活半天，要好好夸夸我才行 🐾
+        </p>
+        <p style={{ fontFamily: 'var(--font-body)', color: 'var(--gray-mid)', fontSize: 14, textAlign: 'center', marginBottom: 16 }}>
+          📍 目的地 | {tripConfig.destination}
+        <br />
+        ⏱️ 行程时长 | {tripConfig.days}天
+        <br />
+        📦 收纳件数 | {totalCount}件
+        </p>
+        {!hideListInModal && (
+          <div style={{ padding: '0 8px' }}>
+            {categories.map(cat => (
+              <div key={cat.id} style={{ marginBottom: 16 }}>
+                <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--gray-dark)', fontSize: 14, fontWeight: 'bold', marginBottom: 8, paddingBottom: 4, borderBottom: '2px solid var(--peach)' }}>
+                  {cat.name}
+                </h3>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {cat.items.map(item => (
+                    <li key={item.id} style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: 13,
+                      color: 'var(--gray-dark)',
+                      marginBottom: 4,
+                      position: 'relative',
+                      paddingLeft: 14,
+                      lineHeight: 1.5,
+                    }}>
+                      <span style={{ position: 'absolute', left: 0, top: 'calc(0.75em + 7.5px)', width: 6, height: 6, borderRadius: '50%', background: 'var(--peach)', transform: 'translateY(-50%)' }} />
+                      {item.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--gray-mid)', textAlign: 'center', marginTop: 12, paddingTop: 8, borderTop: '1px dashed var(--peach)' }}>
+          {randomFooterRef.current}
+        </p>
+      </div>
 
       {/* ══════ Hidden Poster Template ══════ */}
       <div ref={posterRef} className="poster-container" style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
