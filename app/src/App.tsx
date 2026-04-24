@@ -56,50 +56,50 @@ const PURPOSES = [
 
 const ITEM_IMAGES: Record<string, string> = {
   // 证件与财物
-  'item-passport': '/item_passport.png',
-  'item-wallet': '/item_wallet.png',
+  'item-passport': './item_passport.png',
+  'item-wallet': './item_wallet.png',
   // 衣物穿搭
-  'item-shirt': '/item_shirt.png',
-  'item-pants': '/item_pants.png',
-  'item-dress': '/item_dress.png',
-  'item-socks': '/item_socks.png',
-  'item-jacket': '/item_jacket.png',
-  'item-scarf': '/item_scarf.png',
+  'item-shirt': './item_shirt.png',
+  'item-pants': './item_pants.png',
+  'item-dress': './item_dress.png',
+  'item-socks': './item_socks.png',
+  'item-jacket': './item_jacket.png',
+  'item-scarf': './item_scarf.png',
   // 洗护健康
-  'item-toiletries': '/item_toiletries.png',
-  'item-skincare': '/item_skincare.png',
-  'item-mask': '/item_mask.png',
+  'item-toiletries': './item_toiletries.png',
+  'item-skincare': './item_skincare.png',
+  'item-mask': './item_mask.png',
   // 电子设备 & 摄影
-  'item-charger': '/item_charger.png',
-  'item-camera': '/item_camera.png',
-  'item-sunglasses': '/item_sunglasses.png',
+  'item-charger': './item_charger.png',
+  'item-camera': './item_camera.png',
+  'item-sunglasses': './item_sunglasses.png',
   // 其他
-  'item-shoes': '/item_shoes.png',
-  'item-pouch': '/item_pouch.png',
-  'item-hat': '/item_hat.png',
-  'item-sunhat': '/item_sunhat.png',
+  'item-shoes': './item_shoes.png',
+  'item-pouch': './item_pouch.png',
+  'item-hat': './item_hat.png',
+  'item-sunhat': './item_sunhat.png',
 };
 
 /* Category-level image used when entire category is batch-packed */
 function getCategoryImage(categoryName: string): string {
   const n = categoryName.toLowerCase();
-  if (n.includes('证件') || n.includes('财物')) return '/item_bag_documents.png';
-  if (n.includes('衣物') || n.includes('衣服') || n.includes('穿搭')) return '/item_bag_clothes.png';
-  if (n.includes('电子设备')) return '/item_bag_electronics.png';
-  if (n.includes('摄影')) return '/item_bag_camera.png';
-  if (n.includes('沙滩')) return '/item_bag_camera.png';
-  if (n.includes('户外')) return '/item_bag_camera.png';
-  if (n.includes('商务')) return '/item_bag_documents.png';
-  if (n.includes('洗护') || n.includes('健康')) return '/item_toiletries.png';
-  return '/item_pouch.png';
+  if (n.includes('证件') || n.includes('财物')) return './item_bag_documents.png';
+  if (n.includes('衣物') || n.includes('衣服') || n.includes('穿搭')) return './item_bag_clothes.png';
+  if (n.includes('电子设备')) return './item_bag_electronics.png';
+  if (n.includes('摄影')) return './item_bag_camera.png';
+  if (n.includes('沙滩')) return './item_bag_camera.png';
+  if (n.includes('户外')) return './item_bag_camera.png';
+  if (n.includes('商务')) return './item_bag_documents.png';
+  if (n.includes('洗护') || n.includes('健康')) return './item_toiletries.png';
+  return './item_pouch.png';
 }
 
 const DEST_IMAGES: Record<string, string> = {
-  paris: '/dest-paris.jpg',
-  tokyo: '/dest-tokyo.jpg',
-  beach: '/dest-beach.jpg',
-  mountain: '/dest-mountain.jpg',
-  city: '/dest-city.jpg',
+  paris: './dest-paris.jpg',
+  tokyo: './dest-tokyo.jpg',
+  beach: './dest-beach.jpg',
+  mountain: './dest-mountain.jpg',
+  city: './dest-city.jpg',
 };
 
 function uid() {
@@ -122,75 +122,75 @@ function getItemImage(itemName: string): string {
   const n = itemName.toLowerCase();
 
   /* ── 精准单个物品匹配 ── */
-  if (n.includes('药品') || n.includes('药')) return '/item_medicine.png';
-  if (n.includes('电脑') || n.includes('笔记本')) return '/item_laptop.png';
-  if (n.includes('一次性内裤')) return '/item_underwear_disposable.png';
-  if (n.includes('内裤')) return '/item_underwear_v2.png';
-  if (n.includes('t恤')) return '/item_tshirt.png';
-  if (n.includes('吊带上衣')) return '/item_camisole.png';
-  if (n.includes('吊带')) return '/item_camisole.png';
-  if (n.includes('裙子') || n.includes('连衣裙')) return '/item_dress_v2.png';
-  if (n.includes('泳衣')) return '/item_swimsuit_skirt.png';
-  if (n.includes('厚外套')) return '/item_jacket_thick.png';
-  if (n.includes('轻便外套') || n.includes('户外外套')) return '/item_jacket_v2.png';
-  if (n.includes('衬衫')) return '/item_shirt_v2.png';
-  if (n.includes('袜子') || n.includes('袜')) return '/item_socks_v2.png';
-  if (n.includes('雨伞') || n.includes('伞')) return '/item_umbrella.png';
-  if (n.includes('户外登山鞋') || n.includes('登山鞋')) return '/item_hiking_shoes.png';
-  if (n.includes('户外鞋子') || n.includes('户外鞋')) return '/item_hiking_shoes.png';
-  if (n.includes('拖鞋') || n.includes('人字拖') || n.includes('夹脚拖')) return '/item_flipflops.png';
-  if (n.includes('鞋') || n.includes('拖')) return '/item_shoes.png';
-  if (n.includes('洗面奶')) return '/item_facial_cleanser.png';
-  if (n.includes('化妆品')) return '/item_bag_cosmetics.png';
-  if (n.includes('睡衣')) return '/item_pajamas.png';
-  if (n.includes('首饰') || n.includes('配饰') || n.includes('珠宝')) return '/item_bag_jewelry.png';
-  if (n.includes('登山杖')) return '/item_trekking_pole.png';
+  if (n.includes('药品') || n.includes('药')) return './item_medicine.png';
+  if (n.includes('电脑') || n.includes('笔记本')) return './item_laptop.png';
+  if (n.includes('一次性内裤')) return './item_underwear_disposable.png';
+  if (n.includes('内裤')) return './item_underwear_v2.png';
+  if (n.includes('t恤')) return './item_tshirt.png';
+  if (n.includes('吊带上衣')) return './item_camisole.png';
+  if (n.includes('吊带')) return './item_camisole.png';
+  if (n.includes('裙子') || n.includes('连衣裙')) return './item_dress_v2.png';
+  if (n.includes('泳衣')) return './item_swimsuit_skirt.png';
+  if (n.includes('厚外套')) return './item_jacket_thick.png';
+  if (n.includes('轻便外套') || n.includes('户外外套')) return './item_jacket_v2.png';
+  if (n.includes('衬衫')) return './item_shirt_v2.png';
+  if (n.includes('袜子') || n.includes('袜')) return './item_socks_v2.png';
+  if (n.includes('雨伞') || n.includes('伞')) return './item_umbrella.png';
+  if (n.includes('户外登山鞋') || n.includes('登山鞋')) return './item_hiking_shoes.png';
+  if (n.includes('户外鞋子') || n.includes('户外鞋')) return './item_hiking_shoes.png';
+  if (n.includes('拖鞋') || n.includes('人字拖') || n.includes('夹脚拖')) return './item_flipflops.png';
+  if (n.includes('鞋') || n.includes('拖')) return './item_shoes.png';
+  if (n.includes('洗面奶')) return './item_facial_cleanser.png';
+  if (n.includes('化妆品')) return './item_bag_cosmetics.png';
+  if (n.includes('睡衣')) return './item_pajamas.png';
+  if (n.includes('首饰') || n.includes('配饰') || n.includes('珠宝')) return './item_bag_jewelry.png';
+  if (n.includes('登山杖')) return './item_trekking_pole.png';
 
   /* ── 护肤品 / 洗护合集 ── */
-  if (n.includes('洗漱包') || n.includes('旅行套装') || n.includes('旅行装')) return '/item_travel_set.png';
-  if (n.includes('洗漱') || n.includes('洗护')) return '/item_toiletries.png';
-  if (n.includes('面霜') || n.includes('霜')) return '/item_cream.png';
-  if (n.includes('乳液') || n.includes('身体乳') || n.includes('护肤')) return '/item_body_lotion.png';
-  if (n.includes('防晒')) return '/item_sunscreen.png';
+  if (n.includes('洗漱包') || n.includes('旅行套装') || n.includes('旅行装')) return './item_travel_set.png';
+  if (n.includes('洗漱') || n.includes('洗护')) return './item_toiletries.png';
+  if (n.includes('面霜') || n.includes('霜')) return './item_cream.png';
+  if (n.includes('乳液') || n.includes('身体乳') || n.includes('护肤')) return './item_body_lotion.png';
+  if (n.includes('防晒')) return './item_sunscreen.png';
 
   /* ── 帽子 ── */
-  if (n.includes('棒球帽')) return '/item_baseball_cap.png';
-  if (n.includes('户外遮阳帽') || n.includes('户外帽')) return '/item_sunhat_v2.png';
-  if (n.includes('遮阳帽') || n.includes('沙滩帽')) return '/item_sunhat.png';
-  if (n.includes('帽')) return '/item_hat.png';
+  if (n.includes('棒球帽')) return './item_baseball_cap.png';
+  if (n.includes('户外遮阳帽') || n.includes('户外帽')) return './item_sunhat_v2.png';
+  if (n.includes('遮阳帽') || n.includes('沙滩帽')) return './item_sunhat.png';
+  if (n.includes('帽')) return './item_hat.png';
 
   /* ── 证件与财物 ── */
   if (n.includes('护照')) return ITEM_IMAGES['item-passport'];
-  if (n.includes('身份证') || n.includes('行程单')) return '/item_idcard.png';
+  if (n.includes('身份证') || n.includes('行程单')) return './item_idcard.png';
   if (n.includes('银行卡') || n.includes('钱包') || n.includes('名片')) return ITEM_IMAGES['item-wallet'];
-  if (n.includes('现金')) return '/item_cash.png';
+  if (n.includes('现金')) return './item_cash.png';
 
   /* ── 衣物穿搭（兜底） ── */
-  if (n.includes('背心')) return '/item_camisole.png';
+  if (n.includes('背心')) return './item_camisole.png';
   if ((n.includes('衣') || n.includes('衫')) && !n.includes('雨衣') && !n.includes('内衣')) return ITEM_IMAGES['item-shirt'];
   if ((n.includes('裤') || n.includes('裙')) && !n.includes('内衣')) return ITEM_IMAGES['item-pants'];
-  if (n.includes('内衣')) return '/item_bag_underwear.png';
+  if (n.includes('内衣')) return './item_bag_underwear.png';
   if (n.includes('外套') || n.includes('夹克') || n.includes('雨衣') || n.includes('西装')) return ITEM_IMAGES['item-jacket'];
   if (n.includes('围巾')) return ITEM_IMAGES['item-scarf'];
 
   /* ── 洗护健康（兜底） ── */
   if (n.includes('洗') || n.includes('护') || n.includes('霜') || n.includes('液') || n.includes('防晒') || n.includes('卸妆') || n.includes('精华')) return ITEM_IMAGES['item-skincare'];
-  if (n.includes('面膜')) return '/item_mask.png';
-  if (n.includes('能量')) return '/item_snacks.png';
+  if (n.includes('面膜')) return './item_mask.png';
+  if (n.includes('能量')) return './item_snacks.png';
 
   /* ── 电子设备 & 摄影 ── */
   if (n.includes('相机')) return ITEM_IMAGES['item-camera'];
   if (n.includes('三脚架')) return ITEM_IMAGES['item-camera'];
   if (n.includes('充电') || n.includes('插头') || n.includes('转换') || n.includes('电池')) return ITEM_IMAGES['item-charger'];
-  if (n.includes('头戴耳机')) return '/item_headphones.png';
-  if (n.includes('耳机')) return '/item_earbuds.png';
+  if (n.includes('头戴耳机')) return './item_headphones.png';
+  if (n.includes('耳机')) return './item_earbuds.png';
   if (n.includes('电子') || n.includes('设备')) return ITEM_IMAGES['item-sunglasses'];
-  if (n.includes('墨镜') || n.includes('眼镜') || n.includes('太阳镜')) return '/item_sunglasses_v2.png';
+  if (n.includes('墨镜') || n.includes('眼镜') || n.includes('太阳镜')) return './item_sunglasses_v2.png';
 
   /* ── 鞋帽包 & 其他 ── */
   if (n.includes('收纳') || n.includes('袋') || n.includes('包') || n.includes('防水') || n.includes('手机袋')) return ITEM_IMAGES['item-pouch'];
 
-  return '/item_unknown.png';
+  return './item_unknown.png';
 }
 
 /* ═══════════════════════════════════════════════
@@ -733,7 +733,7 @@ export default function App() {
     const br = isMobile ? 8 : 16;
     const days = tripConfig.days || 3;
     const isSmallSize = days <= 5;
-    const suitcaseImg = isSmallSize ? '/v2_suitcase_medium_black.png' : '/v2_suitcase_large_black.png';
+    const suitcaseImg = isSmallSize ? './v2_suitcase_medium_black.png' : './v2_suitcase_large_black.png';
 
     // Suitcase inner lining area (pixel-analyzed; keeps items within outer frame)
     const SUITCASE_INSET = {
@@ -766,7 +766,7 @@ export default function App() {
       <div className={`scene-panel relative overflow-hidden ${isMobile ? 'flex md:hidden aspect-[16/9] w-full flex-shrink-0' : 'hidden md:flex flex-1'}`}>
 
         {/* ══════ LAYER 1: Background (always fixed) ══════ */}
-        <div className="absolute inset-0" style={{ backgroundImage: 'url(/room-floor-2.png)', backgroundSize: 'cover', backgroundPosition: 'center bottom', backgroundRepeat: 'no-repeat' }} />
+        <div className="absolute inset-0" style={{ backgroundImage: 'url(./room-floor-2.png)', backgroundSize: 'cover', backgroundPosition: 'center bottom', backgroundRepeat: 'no-repeat' }} />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(255,251,242,0.3) 0%, rgba(255,251,242,0.05) 50%, rgba(255,251,242,0.4) 100%)' }} />
 
         {/* Particles */}
@@ -797,7 +797,7 @@ export default function App() {
             const itemSize = isMobile ? 64 : 98;
             const isNew = Date.now() - slot.addedAt < 500;
             const imgPath = slot.image || getItemImage(item.text);
-            const extraScale = (imgPath === '/item_bag_documents.png' || imgPath === '/item_laptop.png') ? 1.1 : 1;
+            const extraScale = (imgPath === './item_bag_documents.png' || imgPath === './item_laptop.png') ? 1.1 : 1;
             return (
               <div key={itemId} className="packed-item-visual" style={{
                 position: 'absolute',
@@ -820,7 +820,7 @@ export default function App() {
             top: `${catTop}%`,
             width: catW,
           }}>
-            <img src="/cat-sleeping.png" alt="小猫管家" style={{ width: '100%', height: 'auto' }} className="object-contain drop-shadow-lg" draggable={false} />
+            <img src="./cat-sleeping.png" alt="小猫管家" style={{ width: '100%', height: 'auto' }} className="object-contain drop-shadow-lg" draggable={false} />
           </div>
 
           {/* Closed lid overlay (right half only) */}
@@ -864,7 +864,7 @@ export default function App() {
       <header className="h-14 flex items-center justify-between px-4 md:px-6 z-20 relative"
         style={{ background: 'rgba(255,251,242,0.85)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(242,212,200,0.3)' }}>
         <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="Logo" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
+          <img src="./logo.png" alt="Logo" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
           <span className="text-base font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--gray-dark)' }}>
             拾箱小猫 PackyCat
           </span>
@@ -1214,7 +1214,7 @@ export default function App() {
 
       {/* ══════ Hidden Completion Card Template ══════ */}
       <div ref={completionCardRef} style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: 400, background: '#FFFBF2', padding: 24 }}>
-        <img src="/20_lie_on_top.png" alt="" style={{ width: '100%', height: 'auto', borderRadius: 16, marginBottom: 16 }} />
+        <img src="./20_lie_on_top.png" alt="" style={{ width: '100%', height: 'auto', borderRadius: 16, marginBottom: 16 }} />
         <h2 style={{ fontFamily: 'var(--font-display)', color: 'var(--gray-dark)', fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 6 }}>
           猫工打包已完成！✨
         </h2>
@@ -1266,7 +1266,7 @@ export default function App() {
           style={{ backgroundImage: `url(${getDestImage(tripConfig.destination, tripConfig.purpose)})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
           <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(255,251,242,0.2) 0%, rgba(255,251,242,0) 40%, rgba(255,251,242,0.3) 70%, rgba(255,251,242,1) 100%)' }} />
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center z-10">
-            <img src="/cat-butler.png" alt="小猫管家" className="w-36 h-auto object-contain drop-shadow-xl" draggable={false} />
+            <img src="./cat-butler.png" alt="小猫管家" className="w-36 h-auto object-contain drop-shadow-xl" draggable={false} />
             <div className="w-20 h-28 rounded-xl -mt-2" style={{ background: 'linear-gradient(180deg, #3A3A3A 0%, #2A2A2A 100%)', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
               <div className="w-full h-2 rounded-full mt-2" style={{ background: '#555' }} />
             </div>
