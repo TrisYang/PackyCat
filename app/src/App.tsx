@@ -665,14 +665,32 @@ export default function App() {
     setCatState('idle');
   }, []);
 
+  /* ── Share or Download Image ── */
+  const shareOrDownloadImage = useCallback(async (dataUrl: string, filename: string) => {
+    if (navigator.canShare && navigator.share) {
+      try {
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], filename, { type: 'image/png' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: '拾箱小猫行李清单' });
+          return;
+        }
+      } catch {
+        // 用户取消或分享失败，回退到下载
+      }
+    }
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    link.click();
+  }, []);
+
   /* ── Download Poster ── */
   const downloadPoster = useCallback(() => {
     if (!posterUrl) return;
-    const link = document.createElement('a');
-    link.download = `PackyCat-${tripConfig.destination || 'trip'}.png`;
-    link.href = posterUrl;
-    link.click();
-  }, [posterUrl, tripConfig.destination]);
+    shareOrDownloadImage(posterUrl, `PackyCat-${tripConfig.destination || 'trip'}.png`);
+  }, [posterUrl, tripConfig.destination, shareOrDownloadImage]);
 
   /* ── Completion Effect ── */
   useEffect(() => {
@@ -1158,10 +1176,7 @@ export default function App() {
               </button>
               {completionCardUrl && (
                 <button className="cute-btn flex-1 flex items-center justify-center gap-2 text-sm" onClick={() => {
-                  const link = document.createElement('a');
-                  link.download = `PackyCat-${tripConfig.destination || 'trip'}.png`;
-                  link.href = completionCardUrl;
-                  link.click();
+                  shareOrDownloadImage(completionCardUrl, `PackyCat-${tripConfig.destination || 'trip'}.png`);
                 }}>
                   <Icon name="download" size={15} /> 保存图片
                 </button>
