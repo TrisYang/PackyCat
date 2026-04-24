@@ -41,13 +41,6 @@ interface PackedSlot {
   image?: string; // override image for batch-packed categories
 }
 
-type FlightPhase = 'none' | 'to-cat' | 'at-cat' | 'to-suitcase' | 'in-suitcase' | 'removing';
-
-interface FlightState {
-  itemId: string;
-  phase: FlightPhase;
-}
-
 type CatAction = 'idle' | 'reaching' | 'holding' | 'placing' | 'removing' | 'jumping' | 'pulling';
 
 /* ═══════════════════════════════════════════════
