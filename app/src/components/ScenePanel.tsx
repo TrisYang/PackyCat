@@ -36,7 +36,7 @@ export default function ScenePanel({
   }, []);
   const daysNum = typeof days === 'number' ? days : 0;
   const sz = isMobile
-    ? (daysNum <= 5 ? { w: 300, h: 200 } : { w: 361, h: 240 })
+    ? (daysNum <= 5 ? { w: 285, h: 190 } : { w: 343, h: 228 })
     : (daysNum <= 5 ? { w: 580, h: 387 } : { w: 665, h: 444 });
 
   const catW = isMobile ? 55 : 140;
@@ -89,8 +89,10 @@ export default function ScenePanel({
 
       {/* ══════ LAYER 2+3: Flat Suitcase Image + Cat Inside ══════ */}
       <div className="absolute z-10" style={{
-        left: '50%', bottom: isMobile ? 20 : 40,
-        transform: 'translateX(-50%)',
+        left: '50%',
+        top: isMobile ? '50%' : undefined,
+        bottom: isMobile ? undefined : 40,
+        transform: isMobile ? 'translate(-50%, -50%)' : 'translateX(-50%)',
         width: sz.w, height: sz.h,
       }}>
         {/* Suitcase flat image */}
