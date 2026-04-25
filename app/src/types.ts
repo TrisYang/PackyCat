@@ -14,7 +14,7 @@ export interface Category {
 
 export interface TripConfig {
   destination: string;
-  days: number;
+  days: number | '';
   purpose: string;
 }
 

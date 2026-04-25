@@ -4,7 +4,7 @@ import type { Category } from '@/types';
 interface CompletionCardTemplateProps {
   cardRef: React.RefObject<HTMLDivElement | null>;
   destination: string;
-  days: number;
+  days: number | '';
   totalCount: number;
   categories: Category[];
   hideListInModal: boolean;

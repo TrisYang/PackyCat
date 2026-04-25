@@ -4,7 +4,7 @@ import { getItemImage } from '@/lib/checklist';
 
 interface ScenePanelProps {
   isMobile?: boolean;
-  days: number;
+  days: number | '';
   destination: string;
   packedSlots: Record<string, PackedSlot>;
   allItems: ChecklistItem[];

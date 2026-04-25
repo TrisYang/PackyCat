@@ -9,7 +9,7 @@ import CompletionCardTemplate from '@/components/CompletionCardTemplate';
 export default function App() {
   /* ── State ── */
   const [tripConfig, setTripConfig] = useState<TripConfig>({
-    destination: '', days: 3, purpose: 'city',
+    destination: '', days: '', purpose: 'city',
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
@@ -56,7 +56,7 @@ export default function App() {
 
   /* ── Generate ── */
   const handleGenerate = useCallback(() => {
-    if (!tripConfig.destination.trim()) return;
+    if (!tripConfig.destination.trim() || !tripConfig.days) return;
     setGenerating(true);
     setTimeout(() => {
       const cats = generateChecklist(tripConfig);
@@ -316,9 +316,19 @@ export default function App() {
                     value={tripConfig.destination}
                     onChange={e => setTripConfig(p => ({ ...p, destination: e.target.value }))}
                   />
-                  <input className="cute-input col-span-1" type="number" min={1} max={30} placeholder="天数"
-                    value={tripConfig.days || ''}
-                    onChange={e => setTripConfig(p => ({ ...p, days: parseInt(e.target.value) || 1 }))}
+                  <input className="cute-input col-span-1" inputMode="numeric" pattern="[0-9]*" placeholder="旅行天数..."
+                    value={tripConfig.days}
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setTripConfig(p => ({ ...p, days: '' }));
+                      } else {
+                        const num = parseInt(val, 10);
+                        if (!isNaN(num)) {
+                          setTripConfig(p => ({ ...p, days: num }));
+                        }
+                      }
+                    }}
                   />
                 </div>
                 <select className="cute-select w-full mb-2 md:mb-3"
@@ -328,8 +338,8 @@ export default function App() {
                 </select>
                 <button className="cute-btn w-full flex items-center justify-center gap-2"
                   onClick={handleGenerate}
-                  disabled={!tripConfig.destination.trim() || generating}
-                  style={{ background: '#F2A8A0', opacity: !tripConfig.destination.trim() || generating ? 0.6 : 1 }}>
+                  disabled={!tripConfig.destination.trim() || !tripConfig.days || generating}
+                  style={{ background: '#F2A8A0', opacity: !tripConfig.destination.trim() || !tripConfig.days || generating ? 0.6 : 1 }}>
                   {generating ? (
                     <span className="inline-flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" />
@@ -345,7 +355,7 @@ export default function App() {
               <div className="flex items-center justify-between">
                 <div className="min-w-0">
                   <h2 className="text-sm md:text-base font-bold truncate" style={{ fontFamily: 'var(--font-display)', color: 'var(--gray-dark)' }}>
-                    {tripConfig.destination}{tripConfig.days}日游
+                    {tripConfig.destination}{tripConfig.days ? `${tripConfig.days}日游` : ''}
                   </h2>
                   <p className="text-[11px]" style={{ color: 'var(--gray-mid)' }}>
                     {PURPOSES.find(p => p.value === tripConfig.purpose)?.label}
@@ -407,16 +417,16 @@ export default function App() {
                       onClick={() => setExpandedCats(p => { const n = new Set(p); if (n.has(cat.id)) n.delete(cat.id); else n.add(cat.id); return n; })}>
                       <span style={{ color: cat.isBonus ? 'var(--sky)' : 'var(--peach)' }}><Icon name={cat.icon} size={16} /></span>
                       <span className="text-xs md:text-sm font-bold truncate" style={{ fontFamily: 'var(--font-display)', color: 'var(--gray-dark)' }}>{cat.name}</span>
-                      {cat.isBonus && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold flex-shrink-0" style={{ background: 'var(--sky)', color: 'white' }}>推荐</span>}
+
                       <span className="text-[10px] ml-1 flex-shrink-0" style={{ color: 'var(--gray-mid)' }}>{catPacked}/{cat.items.length}</span>
                       <span className="ml-auto flex-shrink-0" style={{ color: 'var(--gray-mid)' }}><Icon name={isExpanded ? 'chevronUp' : 'chevronDown'} size={13} /></span>
                     </button>
                     <div className="flex items-center gap-0.5 ml-1.5 flex-shrink-0">
                       {cat.items.length > 0 && (
                         <button className="icon-btn" style={{ width: 26, height: 26, borderRadius: 8 }} onClick={() => toggleAllInCat(cat.id)} title={catAllPacked ? "取消全选" : "全选"}>
-                          <div className="w-3.5 h-3.5 rounded flex items-center justify-center transition-all"
+                          <div className="w-5 h-5 rounded flex items-center justify-center transition-all"
                             style={{ background: catAllPacked ? 'var(--peach)' : 'transparent', border: `2px solid ${catAllPacked ? 'var(--peach)' : 'var(--gray-light)'}` }}>
-                            {catAllPacked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
+                            {catAllPacked && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
                           </div>
                         </button>
                       )}
@@ -588,7 +598,7 @@ export default function App() {
                 setPackedSlots({});
                 setSuitcaseClosed(false);
                 setIsEditing(true);
-                setTripConfig({ destination: '', days: 3, purpose: 'city' });
+                setTripConfig({ destination: '', days: '', purpose: 'city' });
               }}
             >
               <Icon name="sparkles" size={15} /> 生成下一次旅行清单

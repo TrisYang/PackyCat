@@ -263,8 +263,8 @@
 /* ── Custom Checkbox ── */
 .custom-checkbox {
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border: 2px solid var(--peach);
   border-radius: 6px;
   cursor: pointer;
@@ -279,10 +279,10 @@
 .custom-checkbox:checked::after {
   content: '';
   position: absolute;
-  left: 4px;
-  top: 1px;
-  width: 6px;
-  height: 10px;
+  left: 6px;
+  top: 2px;
+  width: 7px;
+  height: 12px;
   border: solid white;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
@@ -290,6 +290,20 @@
 .custom-checkbox:hover {
   border-color: var(--rose);
   box-shadow: 0 0 0 3px rgba(212, 165, 165, 0.15);
+}
+@media (max-width: 768px) {
+  .custom-checkbox {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+  }
+  .custom-checkbox:checked::after {
+    left: 8px;
+    top: 3px;
+    width: 8px;
+    height: 14px;
+    border-width: 0 3px 3px 0;
+  }
 }
 
 /* ── Suitcase Area ── */
