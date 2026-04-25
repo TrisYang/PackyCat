@@ -229,7 +229,7 @@ export function getDestinationType(destination: string): 'domestic' | 'hongkong-
    ═══════════════════════════════════════════════ */
 export function generateChecklist(config: TripConfig): Category[] {
   const { days, purpose, destination } = config;
-  const d = Math.max(1, Math.min(days, 30));
+  const d = Math.max(1, Math.min(Number(days) || 1, 30));
   const destType = getDestinationType(destination);
 
   const idDoc = destType === 'international' ? '护照'

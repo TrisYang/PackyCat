@@ -34,13 +34,14 @@ export default function ScenePanel({
     const id = setInterval(() => setNow(Date.now()), 100);
     return () => clearInterval(id);
   }, []);
+  const daysNum = typeof days === 'number' ? days : 0;
   const sz = isMobile
-    ? (days <= 5 ? { w: 300, h: 200 } : { w: 361, h: 240 })
-    : (days <= 5 ? { w: 580, h: 387 } : { w: 665, h: 444 });
+    ? (daysNum <= 5 ? { w: 300, h: 200 } : { w: 361, h: 240 })
+    : (daysNum <= 5 ? { w: 580, h: 387 } : { w: 665, h: 444 });
 
   const catW = isMobile ? 55 : 140;
   const br = isMobile ? 8 : 16;
-  const isSmallSize = days <= 5;
+  const isSmallSize = daysNum <= 5;
   const suitcaseImg = isSmallSize ? './v2_suitcase_medium_black.png' : './v2_suitcase_large_black.png';
 
   // Suitcase inner lining area (pixel-analyzed; keeps items within outer frame)
