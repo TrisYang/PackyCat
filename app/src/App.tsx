@@ -1,12 +1,10 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import html2canvas from 'html2canvas';
 import type { Category, TripConfig, TripHistory, PackedSlot, CatAction } from '@/types';
 import { PURPOSES } from '@/constants';
 import { uid, getCategoryImage, getItemImage, calculateSlot, generateChecklist } from '@/lib/checklist';
 import Icon from '@/components/Icon';
 import ScenePanel from '@/components/ScenePanel';
 import CompletionCardTemplate from '@/components/CompletionCardTemplate';
-import PosterTemplate from '@/components/PosterTemplate';
 
 export default function App() {
   /* ── State ── */
@@ -16,13 +14,10 @@ export default function App() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
   const [catState, setCatState] = useState<CatAction>('idle');
-  const [showPoster, setShowPoster] = useState(false);
-  const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<TripHistory[]>(() => {
     try { const s = localStorage.getItem('purrpack-history'); return s ? JSON.parse(s) : []; } catch { return []; }
   });
-  const [showListOnPoster] = useState(true);
   const [suitcaseClosed, setSuitcaseClosed] = useState(false);
   const [packedSlots, setPackedSlots] = useState<Record<string, PackedSlot>>({});
   const [newItemInputs, setNewItemInputs] = useState<Record<string, string>>({});
@@ -40,7 +35,6 @@ export default function App() {
     randomFooterRef.current = footers[Math.floor(Math.random() * footers.length)];
   }
 
-  const posterRef = useRef<HTMLDivElement>(null);
   const completionCardRef = useRef<HTMLDivElement>(null);
 
   /* ── Derived ── */
@@ -207,20 +201,6 @@ export default function App() {
     setShowHistory(false);
   }, []);
 
-  /* ── Generate Poster ── */
-  const generatePoster = useCallback(async () => {
-    if (!posterRef.current) return;
-    setCatState('pulling');
-    setSuitcaseClosed(true);
-    await new Promise(r => setTimeout(r, 900));
-    const canvas = await html2canvas(posterRef.current, {
-      scale: 2, backgroundColor: '#FFFBF2', useCORS: true, logging: false,
-    });
-    setPosterUrl(canvas.toDataURL('image/png'));
-    setShowPoster(true);
-    setCatState('idle');
-  }, []);
-
   /* ── Share or Download Image ── */
   const shareOrDownloadImage = useCallback(async (dataUrl: string, filename: string) => {
     if (navigator.canShare && navigator.share) {
@@ -241,12 +221,6 @@ export default function App() {
     link.href = dataUrl;
     link.click();
   }, []);
-
-  /* ── Download Poster ── */
-  const downloadPoster = useCallback(() => {
-    if (!posterUrl) return;
-    shareOrDownloadImage(posterUrl, `PackyCat-${tripConfig.destination || 'trip'}.png`);
-  }, [posterUrl, tripConfig.destination, shareOrDownloadImage]);
 
   /* ── Completion Effect ── */
   useEffect(() => {
@@ -306,11 +280,6 @@ export default function App() {
           {categories.length > 0 && (
             <button className="icon-btn" onClick={clearAll} title="清空清单">
               <Icon name="trash" size={18} />
-            </button>
-          )}
-          {allPacked && (
-            <button className="icon-btn" onClick={generatePoster} title="生成旅行卡片" style={{ color: 'var(--rose)' }}>
-              <Icon name="sparkles" size={18} />
             </button>
           )}
         </div>
@@ -517,14 +486,6 @@ export default function App() {
               </div>
             )}
 
-            {/* Completion CTA */}
-            {allPacked && totalCount > 0 && (
-              <div className="mt-4 text-center fade-in-up">
-                <button className="cute-btn w-full flex items-center justify-center gap-2 text-sm" onClick={generatePoster}>
-                  <Icon name="sparkles" size={15} /> 生成旅行纪念卡片
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
@@ -636,33 +597,6 @@ export default function App() {
         </div>
       )}
 
-      {/* ══════ Poster Modal ══════ */}
-      {showPoster && (
-        <div className="modal-overlay" onClick={() => { setShowPoster(false); setSuitcaseClosed(false); }}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden flex flex-col" style={{ maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
-            <div className="flex-1 overflow-y-auto p-4">
-              {posterUrl ? <img src={posterUrl} alt="旅行卡片" className="w-full rounded-xl shadow-sm" /> : (
-                <div className="flex items-center justify-center h-80 md:h-96">
-                  <div className="w-10 h-10 rounded-full animate-pulse" style={{ background: 'var(--peach)' }} />
-                </div>
-              )}
-            </div>
-            <div className="p-4 border-t" style={{ borderColor: 'var(--gray-light)' }}>
-              <div className="flex gap-2">
-                <button className="cute-btn-secondary cute-btn flex-1 flex items-center justify-center gap-2 text-sm" onClick={() => setShowPoster(false)}>
-                  <Icon name="x" size={15} /> 关闭
-                </button>
-                {posterUrl && (
-                  <button className="cute-btn flex-1 flex items-center justify-center gap-2 text-sm" onClick={downloadPoster}>
-                    <Icon name="download" size={15} /> 保存图片
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       <CompletionCardTemplate
         cardRef={completionCardRef}
         destination={tripConfig.destination}
@@ -671,15 +605,6 @@ export default function App() {
         categories={categories}
         hideListInModal={hideListInModal}
         footerText={randomFooterRef.current}
-      />
-      <PosterTemplate
-        posterRef={posterRef}
-        destination={tripConfig.destination}
-        purpose={tripConfig.purpose}
-        days={tripConfig.days}
-        totalCount={totalCount}
-        categories={categories}
-        showListOnPoster={showListOnPoster}
       />
     </div>
   );
